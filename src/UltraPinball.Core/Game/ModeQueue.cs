@@ -39,7 +39,7 @@ public class ModeQueue
         if (!_modes.Remove(mode))
             return;
         _log.LogDebug("Mode removed: {Mode}", mode);
-        mode.ModeStopped();
+        mode.Deactivate();
     }
 
     public bool Contains(Mode mode) => _modes.Contains(mode);

@@ -133,13 +133,29 @@ public abstract class Mode
     /// <summary>Called by ModeQueue when this mode becomes active.</summary>
     public virtual void ModeStarted() { }
 
-    /// <summary>Called by ModeQueue when this mode is removed.</summary>
+    /// <summary>
+    /// Called by ModeQueue when this mode is removed, after all pending handlers and
+    /// delays have been cleared. Override to release external resources such as event
+    /// subscriptions. You do not need to call <c>base.ModeStopped()</c>.
+    /// </summary>
     public virtual void ModeStopped() { }
 
     /// <summary>Called every game loop iteration while active.</summary>
     public virtual void Tick(float deltaSeconds) { }
 
     // ── Internal: called by ModeQueue ────────────────────────────────────────
+
+    /// <summary>
+    /// Called by <see cref="ModeQueue"/> just before <see cref="ModeStopped"/>.
+    /// Clears all registered handlers and pending delays so the mode starts fresh
+    /// if it is added again (Ball/Game lifecycle).
+    /// </summary>
+    internal void Deactivate()
+    {
+        _handlers.Clear();
+        _delays.Clear();
+        ModeStopped();
+    }
 
     /// <summary>
     /// Processes an incoming switch event. Returns Stop if this mode consumed

@@ -49,6 +49,7 @@ public class GameController
     private int _currentPlayerIndex;
     private DateTime _ballStartTime;
     private readonly ConcurrentQueue<(int HwNumber, SwitchState State)> _pendingSwitchEvents = new();
+    private readonly List<(Mode Mode, ModeLifecycle Lifecycle)> _registeredModes = new();
 
     /// <summary>Initialises the game controller with a machine definition and hardware platform.</summary>
     /// <param name="config">The machine definition that declares all switches, coils, and LEDs.</param>
@@ -123,9 +124,28 @@ public class GameController
 
     /// <summary>
     /// Called once after hardware is ready, before the game loop starts.
-    /// Override to add initial modes (attract, etc.).
+    /// Override to call <see cref="RegisterMode"/> for all modes used by the game.
     /// </summary>
     protected virtual void OnStartup() { }
+
+    /// <summary>
+    /// Registers a mode with a lifecycle that controls when it is automatically
+    /// added to and removed from the <see cref="ModeQueue"/>.
+    /// <list type="bullet">
+    ///   <item><see cref="ModeLifecycle.System"/> — added immediately, never removed.</item>
+    ///   <item><see cref="ModeLifecycle.Game"/> — added on <see cref="StartGame"/>, removed on <see cref="EndGame"/>.</item>
+    ///   <item><see cref="ModeLifecycle.Ball"/> — added on <see cref="StartBall"/>, removed on <see cref="EndBall"/>.</item>
+    ///   <item><see cref="ModeLifecycle.Manual"/> — not managed; caller uses <see cref="ModeQueue"/> directly.</item>
+    /// </list>
+    /// Call this from <see cref="OnStartup"/>. Manual-lifecycle modes may also be passed here
+    /// as a no-op registration for book-keeping, or simply managed via <see cref="Modes"/> directly.
+    /// </summary>
+    public void RegisterMode(Mode mode, ModeLifecycle lifecycle = ModeLifecycle.Manual)
+    {
+        _registeredModes.Add((mode, lifecycle));
+        if (lifecycle == ModeLifecycle.System)
+            Modes.Add(mode);
+    }
 
     // ── Game flow (call from modes or override) ───────────────────────────────
 
@@ -156,19 +176,26 @@ public class GameController
         AddPlayer();
         _log.LogInformation("Game started.");
         GameStarted?.Invoke();
+        foreach (var (mode, lc) in _registeredModes)
+            if (lc == ModeLifecycle.Game)
+                Modes.Add(mode);
         StartBall();
     }
 
     public virtual void StartBall()
     {
+        foreach (var (mode, lc) in _registeredModes)
+            if (lc == ModeLifecycle.Ball && !Modes.Contains(mode))
+                Modes.Add(mode);
         _ballStartTime = DateTime.UtcNow;
         _log.LogInformation("Ball {Ball} starting for {Player}.", Ball, CurrentPlayer?.Name);
         BallStarting?.Invoke(Ball);
     }
 
     /// <summary>
-    /// Ends the current ball. Handles extra balls, player rotation, ball increment,
-    /// and calls <see cref="EndGame"/> when the final ball of the final player is done.
+    /// Ends the current ball. Removes Ball-lifecycle modes, handles extra balls,
+    /// player rotation, and ball increment. Calls <see cref="EndGame"/> when the
+    /// final ball of the final player is done.
     /// </summary>
     public virtual void EndBall()
     {
@@ -177,6 +204,10 @@ public class GameController
 
         _log.LogInformation("Ball {Ball} ended. Score: {Score}", Ball, CurrentPlayer?.Score);
         BallEnded?.Invoke(Ball);
+
+        foreach (var (mode, lc) in _registeredModes)
+            if (lc == ModeLifecycle.Ball)
+                Modes.Remove(mode);
 
         if (CurrentPlayer!.ExtraBalls > 0)
         {
@@ -203,6 +234,9 @@ public class GameController
 
     public virtual void EndGame()
     {
+        foreach (var (mode, lc) in _registeredModes)
+            if (lc == ModeLifecycle.Game)
+                Modes.Remove(mode);
         _log.LogInformation("Game ended.");
         Ball = 0;
         GameEnded?.Invoke();
