@@ -135,6 +135,13 @@ public class SimulatorPlatform : IHardwarePlatform
     private void KeyboardLoop(object? obj)
     {
         var ct = (CancellationToken)(obj ?? CancellationToken.None);
+
+        if (Console.IsInputRedirected)
+        {
+            SimLog("No console detected — keyboard input disabled.");
+            return;
+        }
+
         while (!ct.IsCancellationRequested)
         {
             if (Console.KeyAvailable)
