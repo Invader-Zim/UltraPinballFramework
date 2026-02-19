@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
-using UltraPinball.Core.Game;
+using UltraPinball.Core.Devices;
+using UltraPinball.Sample;
 using UltraPinball.Simulator;
 
 // ── Logging ───────────────────────────────────────────────────────────────────
@@ -7,98 +8,52 @@ using UltraPinball.Simulator;
 using var loggerFactory = LoggerFactory.Create(builder =>
     builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
 
-// ── Machine definition ────────────────────────────────────────────────────────
-// Replace this with your actual machine config class.
+// ── Machine ───────────────────────────────────────────────────────────────────
 
 var machine = new SampleMachine();
 
-// ── Platform selection ────────────────────────────────────────────────────────
+// ── Platform ──────────────────────────────────────────────────────────────────
 // Swap SimulatorPlatform for FastNeuronPlatform when running on real hardware.
+//
+// Keyboard layout (US):
+//   S          = Start
+//   Z / X      = Left / Right flipper
+//   A / '      = Left / Right inlane
+//   Q / P      = Left / Right outlane
+//   D          = ShooterLane (simulate ball arriving / leaving)
+//   1–5        = Trough0–4  (simulate a drain)
 
-var simulator = new SimulatorPlatform()
-    .MapKey(ConsoleKey.Z, switchHwNumber: 0x00)  // Left flipper
-    .MapKey(ConsoleKey.X, switchHwNumber: 0x01)  // Right flipper
-    .MapKey(ConsoleKey.S, switchHwNumber: 0x10)  // Start button
-    .MapKey(ConsoleKey.D, switchHwNumber: 0x20); // Drain
+var platform = new SimulatorPlatform()
+    // Cabinet
+    .MapKey(ConsoleKey.S,    switchHwNumber: 0x0B)  // Start
+    // Flippers
+    .MapKey(ConsoleKey.Z,    switchHwNumber: 0x05)  // LeftFlipper
+    .MapKey(ConsoleKey.X,    switchHwNumber: 0x0A)  // RightFlipper
+    // Inlanes / outlanes
+    .MapKey(ConsoleKey.A,    switchHwNumber: 0x02)  // LeftInlane
+    .MapKey(ConsoleKey.Oem7, switchHwNumber: 0x07)  // RightInlane  (apostrophe)
+    .MapKey(ConsoleKey.Q,    switchHwNumber: 0x01)  // LeftOutlane
+    .MapKey(ConsoleKey.P,    switchHwNumber: 0x06)  // RightOutlane
+    // Ball path
+    .MapKey(ConsoleKey.D,    switchHwNumber: 0x00)  // ShooterLane
+    // Trough drain simulation
+    .MapKey(ConsoleKey.D1,   switchHwNumber: 0x10)  // Trough0
+    .MapKey(ConsoleKey.D2,   switchHwNumber: 0x11)  // Trough1
+    .MapKey(ConsoleKey.D3,   switchHwNumber: 0x12)  // Trough2
+    .MapKey(ConsoleKey.D4,   switchHwNumber: 0x13)  // Trough3
+    .MapKey(ConsoleKey.D5,   switchHwNumber: 0x14)  // Trough4
+    // Trough starts full — 5 balls present, NC optos open (beam broken)
+    .SetInitialState(0x10, SwitchState.Open)
+    .SetInitialState(0x11, SwitchState.Open)
+    .SetInitialState(0x12, SwitchState.Open)
+    .SetInitialState(0x13, SwitchState.Open)
+    .SetInitialState(0x14, SwitchState.Open);
 
 // ── Game ──────────────────────────────────────────────────────────────────────
 
-var game = new SampleGame(machine, simulator, loggerFactory);
+var game = new SampleGame(machine, platform, loggerFactory);
 
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
 
 await game.RunAsync(cts.Token);
-
-// ── Sample machine definition ─────────────────────────────────────────────────
-
-class SampleMachine : MachineConfig
-{
-    public override void Configure()
-    {
-        AddSwitch("LeftFlipper",  hwNumber: 0x00, debounce: false);
-        AddSwitch("RightFlipper", hwNumber: 0x01, debounce: false);
-        AddSwitch("StartButton",  hwNumber: 0x10);
-        AddSwitch("Drain",        hwNumber: 0x20);
-
-        AddCoil("LeftFlipperMain",  hwNumber: 0x00, defaultPulseMs: 10);
-        AddCoil("RightFlipperMain", hwNumber: 0x01, defaultPulseMs: 10);
-
-        // Hardware-level flipper rules: the board fires the coil — no host round-trip
-        AddFlipperRule("LeftFlipper",  mainCoil: "LeftFlipperMain");
-        AddFlipperRule("RightFlipper", mainCoil: "RightFlipperMain");
-    }
-}
-
-// ── Sample game ───────────────────────────────────────────────────────────────
-
-class SampleGame : GameController
-{
-    public SampleGame(MachineConfig config, SimulatorPlatform platform,
-                      ILoggerFactory loggerFactory)
-        : base(config, platform, loggerFactory) { }
-
-    protected override void OnStartup()
-    {
-        Modes.Add(new AttractMode());
-        Modes.Add(new DrainMode());
-    }
-}
-
-// ── Sample modes ──────────────────────────────────────────────────────────────
-
-class AttractMode : Mode
-{
-    public AttractMode() : base(priority: 1) { }
-
-    public override void ModeStarted()
-    {
-        Console.WriteLine("[ATTRACT] Waiting for start button (press S)...");
-        AddSwitchHandler("StartButton", SwitchActivation.Active, OnStartPressed);
-    }
-
-    private SwitchHandlerResult OnStartPressed(UltraPinball.Core.Devices.Switch sw)
-    {
-        Console.WriteLine("[ATTRACT] Start pressed — starting game!");
-        Game.StartGame();
-        return SwitchHandlerResult.Stop;
-    }
-}
-
-class DrainMode : Mode
-{
-    public DrainMode() : base(priority: 10) { }
-
-    public override void ModeStarted()
-    {
-        AddSwitchHandler("Drain", SwitchActivation.Active, OnDrain);
-    }
-
-    private SwitchHandlerResult OnDrain(UltraPinball.Core.Devices.Switch sw)
-    {
-        if (!Game.IsGameInProgress) return SwitchHandlerResult.Continue;
-        Console.WriteLine($"[DRAIN] Ball {Game.Ball} drained!  Score: {Game.CurrentPlayer?.Score:N0}");
-        Game.EndBall();
-        return SwitchHandlerResult.Stop;
-    }
-}

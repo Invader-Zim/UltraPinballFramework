@@ -1,0 +1,89 @@
+using UltraPinball.Core.Devices;
+using UltraPinball.Core.Game;
+
+namespace UltraPinball.Sample;
+
+/// <summary>
+/// A typical 5-ball-trough playfield used as the framework reference machine.
+///
+/// Layout:
+///   Trough (5 NC opto switches + eject coil) → Shooter lane → Auto-launch coil
+///   Left side:  outlane, inlane, flipper (main+hold), EOS, sling
+///   Right side: mirror of left
+/// </summary>
+public class SampleMachine : MachineConfig
+{
+    public override void Configure()
+    {
+        ConfigureSwitches();
+        ConfigureCoils();
+        ConfigureHardwareRules();
+    }
+
+    private void ConfigureSwitches()
+    {
+        // ── Ball path ─────────────────────────────────────────────────────────
+        AddSwitch("ShooterLane",    hwNumber: 0x00);
+
+        // ── Left side ─────────────────────────────────────────────────────────
+        AddSwitch("LeftOutlane",    hwNumber: 0x01);
+        AddSwitch("LeftInlane",     hwNumber: 0x02);
+        AddSwitch("LeftFlipperEos", hwNumber: 0x03);  // TODO: wire into EOS hardware rule
+        AddSwitch("LeftSling",      hwNumber: 0x04);  // two physical switches in parallel → one game switch
+        AddSwitch("LeftFlipper",    hwNumber: 0x05, debounce: false);
+
+        // ── Right side ────────────────────────────────────────────────────────
+        AddSwitch("RightOutlane",    hwNumber: 0x06);
+        AddSwitch("RightInlane",     hwNumber: 0x07);
+        AddSwitch("RightFlipperEos", hwNumber: 0x08);  // TODO: wire into EOS hardware rule
+        AddSwitch("RightSling",      hwNumber: 0x09);
+        AddSwitch("RightFlipper",    hwNumber: 0x0A, debounce: false);
+
+        // ── Cabinet ───────────────────────────────────────────────────────────
+        AddSwitch("Start",          hwNumber: 0x0B);
+
+        // ── Trough (5-ball, normally-closed opto switches) ────────────────────
+        // Active = Open = beam broken = ball present.
+        // Trough0 is nearest the eject coil; Trough4 is farthest (drain end).
+        AddSwitch("Trough0", hwNumber: 0x10, type: SwitchType.NormallyClosed);
+        AddSwitch("Trough1", hwNumber: 0x11, type: SwitchType.NormallyClosed);
+        AddSwitch("Trough2", hwNumber: 0x12, type: SwitchType.NormallyClosed);
+        AddSwitch("Trough3", hwNumber: 0x13, type: SwitchType.NormallyClosed);
+        AddSwitch("Trough4", hwNumber: 0x14, type: SwitchType.NormallyClosed);
+    }
+
+    private void ConfigureCoils()
+    {
+        // ── Left flipper (dual-wound) ─────────────────────────────────────────
+        AddCoil("LeftFlipperMain", hwNumber: 0x00, defaultPulseMs: 30);
+        AddCoil("LeftFlipperHold", hwNumber: 0x01, defaultPulseMs:  1);
+
+        // ── Right flipper (dual-wound) ────────────────────────────────────────
+        AddCoil("RightFlipperMain", hwNumber: 0x02, defaultPulseMs: 30);
+        AddCoil("RightFlipperHold", hwNumber: 0x03, defaultPulseMs:  1);
+
+        // ── Slings ────────────────────────────────────────────────────────────
+        AddCoil("LeftSlingCoil",  hwNumber: 0x04, defaultPulseMs: 20);
+        AddCoil("RightSlingCoil", hwNumber: 0x05, defaultPulseMs: 20);
+
+        // ── Ball devices ──────────────────────────────────────────────────────
+        AddCoil("TroughEject", hwNumber: 0x06, defaultPulseMs: 15);
+        AddCoil("AutoLaunch",  hwNumber: 0x07, defaultPulseMs: 70);
+    }
+
+    private void ConfigureHardwareRules()
+    {
+        // Flippers: board fires the coil the instant the button closes.
+        AddFlipperRule("LeftFlipper",
+            mainCoil: "LeftFlipperMain", holdCoil: "LeftFlipperHold",
+            pulseMs: 30, holdPower: 0.25f);
+
+        AddFlipperRule("RightFlipper",
+            mainCoil: "RightFlipperMain", holdCoil: "RightFlipperHold",
+            pulseMs: 30, holdPower: 0.25f);
+
+        // Slings: board fires the coil the instant the switch closes.
+        AddBumperRule("LeftSling",  coilName: "LeftSlingCoil",  pulseMs: 20);
+        AddBumperRule("RightSling", coilName: "RightSlingCoil", pulseMs: 20);
+    }
+}
