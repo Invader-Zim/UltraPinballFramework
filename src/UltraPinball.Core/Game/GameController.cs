@@ -1,0 +1,237 @@
+using System.Collections.Concurrent;
+using UltraPinball.Core.Devices;
+using UltraPinball.Core.Platform;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace UltraPinball.Core.Game;
+
+/// <summary>
+/// The central game object. Owns the hardware platform, device collections,
+/// mode queue, player list, and game loop.
+///
+/// Subclass this to add machine-specific game flow, or use it directly with
+/// modes for a purely composition-based approach.
+/// </summary>
+public class GameController
+{
+    // ── Public surface for modes ──────────────────────────────────────────────
+
+    public DeviceCollection<Switch> Switches => _config.Switches;
+    public DeviceCollection<Coil> Coils => _config.Coils;
+    public DeviceCollection<Led> Leds => _config.Leds;
+    public ModeQueue Modes { get; }
+    public IHardwarePlatform Hardware { get; }
+
+    // ── Game state ────────────────────────────────────────────────────────────
+
+    public IReadOnlyList<Player> Players => _players;
+    public Player? CurrentPlayer => _players.Count > 0 ? _players[_currentPlayerIndex] : null;
+    public int Ball { get; private set; }
+    public int BallsPerGame { get; set; } = 3;
+    public int MaxPlayers { get; set; } = 4;
+    public bool IsGameInProgress => Ball > 0;
+
+    // ── Game lifecycle events ─────────────────────────────────────────────────
+
+    public event Action? GameStarted;
+    public event Action<int>? BallStarting;    // ball number
+    public event Action<int>? BallEnded;       // ball number
+    public event Action? GameEnded;
+    public event Action<Player>? PlayerAdded;
+
+    // ── Internals ─────────────────────────────────────────────────────────────
+
+    private readonly MachineConfig _config;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<GameController> _log;
+    private readonly List<Player> _players = new();
+    private int _currentPlayerIndex;
+    private DateTime _ballStartTime;
+    private readonly ConcurrentQueue<(int HwNumber, SwitchState State)> _pendingSwitchEvents = new();
+
+    /// <summary>Initialises the game controller with a machine definition and hardware platform.</summary>
+    /// <param name="config">The machine definition that declares all switches, coils, and LEDs.</param>
+    /// <param name="platform">
+    /// The hardware abstraction to use. Pass a <c>SimulatorPlatform</c>
+    /// for keyboard-driven development and testing, or a real platform implementation for hardware.
+    /// </param>
+    /// <param name="loggerFactory">
+    /// Optional logger factory. Defaults to <see cref="Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory"/>
+    /// (no logging) if not supplied.
+    /// </param>
+    public GameController(MachineConfig config, IHardwarePlatform platform,
+                          ILoggerFactory? loggerFactory = null)
+    {
+        _config = config;
+        Hardware = platform;
+        _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+        _log = _loggerFactory.CreateLogger<GameController>();
+        Modes = new ModeQueue(this, _loggerFactory.CreateLogger<ModeQueue>());
+    }
+
+    // ── Startup ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Connects to hardware, syncs initial switch states, and starts the game loop.
+    /// Blocks until <paramref name="ct"/> is cancelled.
+    /// </summary>
+    public async Task RunAsync(CancellationToken ct = default)
+    {
+        _log.LogInformation("Connecting to hardware...");
+        await Hardware.ConnectAsync(ct);
+        _config.Initialize(Hardware);
+
+        // Sync initial switch states from hardware
+        var initialStates = await Hardware.GetInitialSwitchStatesAsync();
+        foreach (var (hwNum, state) in initialStates)
+        {
+            if (_config.Switches.TryGetByHw(hwNum, out var sw) && sw != null)
+            {
+                sw.State = state;
+                sw.LastChangedAt = DateTime.UtcNow;
+            }
+        }
+
+        // Wire up hardware switch events (raised on background thread)
+        Hardware.SwitchChanged += (hwNum, state) => _pendingSwitchEvents.Enqueue((hwNum, state));
+
+        _log.LogInformation("Hardware ready. Starting game loop.");
+        OnStartup();
+
+        // ── Game loop ──────────────────────────────────────────────────────────
+        var lastTick = DateTime.UtcNow;
+        while (!ct.IsCancellationRequested)
+        {
+            var now = DateTime.UtcNow;
+            var delta = (float)(now - lastTick).TotalSeconds;
+            lastTick = now;
+
+            // Drain switch event queue (enqueued from hardware background thread)
+            while (_pendingSwitchEvents.TryDequeue(out var evt))
+                ProcessSwitchEvent(evt.HwNumber, evt.State);
+
+            Modes.Tick(delta);
+
+            // ~1ms sleep keeps CPU usage reasonable while maintaining responsiveness
+            await Task.Delay(1, ct).ConfigureAwait(false);
+        }
+
+        await Hardware.DisconnectAsync();
+        _log.LogInformation("Game loop stopped.");
+    }
+
+    /// <summary>
+    /// Called once after hardware is ready, before the game loop starts.
+    /// Override to add initial modes (attract, etc.).
+    /// </summary>
+    protected virtual void OnStartup() { }
+
+    // ── Game flow (call from modes or override) ───────────────────────────────
+
+    /// <summary>
+    /// Adds a new player to the current game and raises <see cref="PlayerAdded"/>.
+    /// Override to enforce a maximum player count or apply machine-specific player setup.
+    /// </summary>
+    /// <returns>The newly created player.</returns>
+    public virtual Player AddPlayer()
+    {
+        var player = CreatePlayer($"Player {_players.Count + 1}");
+        _players.Add(player);
+        _log.LogInformation("Player added: {Player}", player.Name);
+        PlayerAdded?.Invoke(player);
+        return player;
+    }
+
+    /// <summary>
+    /// Starts a new game: clears players, adds one player, sets ball to 1, and begins the first ball.
+    /// Does nothing if a game is already in progress.
+    /// </summary>
+    public virtual void StartGame()
+    {
+        if (IsGameInProgress) return;
+        _players.Clear();
+        _currentPlayerIndex = 0;
+        Ball = 1;
+        AddPlayer();
+        _log.LogInformation("Game started.");
+        GameStarted?.Invoke();
+        StartBall();
+    }
+
+    public virtual void StartBall()
+    {
+        _ballStartTime = DateTime.UtcNow;
+        _log.LogInformation("Ball {Ball} starting for {Player}.", Ball, CurrentPlayer?.Name);
+        BallStarting?.Invoke(Ball);
+    }
+
+    /// <summary>
+    /// Ends the current ball. Handles extra balls, player rotation, ball increment,
+    /// and calls <see cref="EndGame"/> when the final ball of the final player is done.
+    /// </summary>
+    public virtual void EndBall()
+    {
+        if (CurrentPlayer != null)
+            CurrentPlayer.GameTime += DateTime.UtcNow - _ballStartTime;
+
+        _log.LogInformation("Ball {Ball} ended. Score: {Score}", Ball, CurrentPlayer?.Score);
+        BallEnded?.Invoke(Ball);
+
+        if (CurrentPlayer!.ExtraBalls > 0)
+        {
+            CurrentPlayer.ExtraBalls--;
+            StartBall();
+            return;
+        }
+
+        if (_currentPlayerIndex + 1 < _players.Count)
+        {
+            _currentPlayerIndex++;
+        }
+        else
+        {
+            Ball++;
+            _currentPlayerIndex = 0;
+        }
+
+        if (Ball > BallsPerGame)
+            EndGame();
+        else
+            StartBall();
+    }
+
+    public virtual void EndGame()
+    {
+        _log.LogInformation("Game ended.");
+        Ball = 0;
+        GameEnded?.Invoke();
+    }
+
+    // ── Helpers for modes ─────────────────────────────────────────────────────
+
+    /// <summary>Override to use a custom Player subclass.</summary>
+    protected virtual Player CreatePlayer(string name) => new Player(name);
+
+    /// <summary>Creates a logger for a mode or other component by name.</summary>
+    public ILogger CreateLogger(string name) => _loggerFactory.CreateLogger(name);
+
+    // ── Switch event processing ───────────────────────────────────────────────
+
+    private void ProcessSwitchEvent(int hwNumber, SwitchState newState)
+    {
+        if (!_config.Switches.TryGetByHw(hwNumber, out var sw) || sw == null)
+        {
+            _log.LogWarning("Switch event for unregistered hw number 0x{Hw:X2}. Ignored.", hwNumber);
+            return;
+        }
+
+        if (sw.State == newState) return; // deduplicate
+
+        sw.State = newState;
+        sw.LastChangedAt = DateTime.UtcNow;
+
+        _log.LogDebug("Switch {Name}: {State} (active={Active})", sw.Name, newState, sw.IsActive);
+        Modes.HandleSwitchEvent(sw, newState);
+    }
+}

@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{30AC54BC-4956-4351-922D-547C3B1FB944}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Core", "src\UltraPinball.Core\UltraPinball.Core.csproj", "{FA091C9F-A426-4A36-8121-4B534AAD6D6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Platforms.Fast", "src\UltraPinball.Platforms.Fast\UltraPinball.Platforms.Fast.csproj", "{0C10236F-85A8-44D4-B0EB-4080B6CEDC87}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Simulator", "src\UltraPinball.Simulator\UltraPinball.Simulator.csproj", "{7037F169-AE79-402F-8413-221BC252C2F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Sample", "src\UltraPinball.Sample\UltraPinball.Sample.csproj", "{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B259056A-A74A-4F8B-B3D0-D72AA8A128B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Tests", "tests\UltraPinball.Tests\UltraPinball.Tests.csproj", "{AC278ED2-89FE-4FC1-8CD2-89192AF22031}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA091C9F-A426-4A36-8121-4B534AAD6D6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA091C9F-A426-4A36-8121-4B534AAD6D6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA091C9F-A426-4A36-8121-4B534AAD6D6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA091C9F-A426-4A36-8121-4B534AAD6D6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C10236F-85A8-44D4-B0EB-4080B6CEDC87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C10236F-85A8-44D4-B0EB-4080B6CEDC87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C10236F-85A8-44D4-B0EB-4080B6CEDC87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C10236F-85A8-44D4-B0EB-4080B6CEDC87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7037F169-AE79-402F-8413-221BC252C2F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7037F169-AE79-402F-8413-221BC252C2F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7037F169-AE79-402F-8413-221BC252C2F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7037F169-AE79-402F-8413-221BC252C2F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC278ED2-89FE-4FC1-8CD2-89192AF22031}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC278ED2-89FE-4FC1-8CD2-89192AF22031}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC278ED2-89FE-4FC1-8CD2-89192AF22031}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC278ED2-89FE-4FC1-8CD2-89192AF22031}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FA091C9F-A426-4A36-8121-4B534AAD6D6D} = {30AC54BC-4956-4351-922D-547C3B1FB944}
+		{0C10236F-85A8-44D4-B0EB-4080B6CEDC87} = {30AC54BC-4956-4351-922D-547C3B1FB944}
+		{7037F169-AE79-402F-8413-221BC252C2F1} = {30AC54BC-4956-4351-922D-547C3B1FB944}
+		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75} = {30AC54BC-4956-4351-922D-547C3B1FB944}
+		{AC278ED2-89FE-4FC1-8CD2-89192AF22031} = {B259056A-A74A-4F8B-B3D0-D72AA8A128B2}
+	EndGlobalSection
+EndGlobal
