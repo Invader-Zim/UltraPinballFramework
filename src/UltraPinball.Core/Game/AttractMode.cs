@@ -26,6 +26,7 @@ public class AttractMode : Mode
         Log.LogInformation("[ATTRACT] Waiting for start button...");
         AddSwitchHandler("Start", SwitchActivation.Active, OnStartPressed);
         Game.GameEnded += OnGameEnded;
+        Game.Media?.Post(MediaEvents.AttractIdle);
     }
 
     public override void ModeStopped()
@@ -82,5 +83,8 @@ public class AttractMode : Mode
     /// not press Start to skip it). Override to trigger attract animations, etc.
     /// </summary>
     protected virtual void OnGameOverCompleted()
-        => Log.LogInformation("[ATTRACT] Waiting for start button...");
+    {
+        Log.LogInformation("[ATTRACT] Waiting for start button...");
+        Game.Media?.Post(MediaEvents.AttractIdle);
+    }
 }

@@ -46,4 +46,12 @@ public static class MediaEvents
     /// Payload: <c>{ player: string, total_players: int }</c>.
     /// </summary>
     public const string PlayerAdded = "player_added";
+
+    // ── Attract ────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Attract loop is idle — waiting for the start button, or resuming after
+    /// a game-over dwell completes. No payload.
+    /// </summary>
+    public const string AttractIdle = "attract_idle";
 }
