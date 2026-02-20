@@ -19,7 +19,7 @@ public class SimulatorPlatform : IHardwarePlatform
 {
     public event Action<int, SwitchState>? SwitchChanged;
 
-    private readonly Dictionary<ConsoleKey, int> _keyMappings = new();
+    private readonly Dictionary<ConsoleKey, int[]> _keyMappings = new();
     private readonly Dictionary<ConsoleKey, string> _keyLabels = new();
     private readonly Dictionary<int, SwitchState> _initialStates = new();
     private readonly Dictionary<int, SwitchState> _currentStates = new();
@@ -32,7 +32,17 @@ public class SimulatorPlatform : IHardwarePlatform
     /// <param name="label">Optional switch name shown in the startup key-map printout.</param>
     public SimulatorPlatform MapKey(ConsoleKey key, int switchHwNumber, string? label = null)
     {
-        _keyMappings[key] = switchHwNumber;
+        _keyMappings[key] = [switchHwNumber];
+        if (label != null) _keyLabels[key] = label;
+        return this;
+    }
+
+    /// <summary>Maps a console key to multiple switch hardware numbers, pulsing all of them
+    /// simultaneously. Useful for adjacent switches that fire together in play (e.g. outlane + sling).</summary>
+    /// <param name="label">Optional label shown in the startup key-map printout.</param>
+    public SimulatorPlatform MapKey(ConsoleKey key, int[] switchHwNumbers, string? label = null)
+    {
+        _keyMappings[key] = switchHwNumbers;
         if (label != null) _keyLabels[key] = label;
         return this;
     }
@@ -150,11 +160,11 @@ public class SimulatorPlatform : IHardwarePlatform
             if (Console.KeyAvailable)
             {
                 var key = Console.ReadKey(intercept: true);
-                if (_keyMappings.TryGetValue(key.Key, out int hwNum))
+                if (_keyMappings.TryGetValue(key.Key, out int[]? hwNums))
                 {
-                    TriggerSwitch(hwNum, SwitchState.Closed);
+                    foreach (var hwNum in hwNums) TriggerSwitch(hwNum, SwitchState.Closed);
                     Thread.Sleep(50); // simulate contact time
-                    TriggerSwitch(hwNum, SwitchState.Open);
+                    foreach (var hwNum in hwNums) TriggerSwitch(hwNum, SwitchState.Open);
                 }
             }
             Thread.Sleep(5);
@@ -170,10 +180,11 @@ public class SimulatorPlatform : IHardwarePlatform
     {
         if (_keyMappings.Count == 0) return;
         SimLog("Key mappings:");
-        foreach (var (key, hw) in _keyMappings)
+        foreach (var (key, hws) in _keyMappings)
         {
             var label = _keyLabels.TryGetValue(key, out var l) ? $" ({l})" : "";
-            SimLog($"  {(char)key} → sw 0x{hw:X2}{label}");
+            var hwStr = string.Join("+", hws.Select(h => $"0x{h:X2}"));
+            SimLog($"  {(char)key} → sw {hwStr}{label}");
         }
     }
 }
