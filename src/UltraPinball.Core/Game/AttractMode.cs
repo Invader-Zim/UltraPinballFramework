@@ -48,7 +48,7 @@ public class AttractMode : Mode
         {
             var player = Game.AddPlayer();
             Log.LogInformation("[ATTRACT] Player {Number} added.", Game.Players.Count);
-            Game.Media?.Post("player_added", new { player = player.Name, total_players = Game.Players.Count });
+            Game.Media?.Post(MediaEvents.PlayerAdded, new { player = player.Name, total_players = Game.Players.Count });
             return SwitchHandlerResult.Stop;
         }
 

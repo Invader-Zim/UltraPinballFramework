@@ -17,7 +17,10 @@ public interface IMediaEventSink
     /// Posts a named event to the media controller with an optional data payload.
     /// The payload is serialized to JSON by the implementation.
     /// </summary>
-    /// <param name="eventType">Snake-case event name, e.g. <c>"ball_starting"</c>.</param>
+    /// <param name="eventType">
+    /// Snake-case event name. Use <see cref="MediaEvents"/> constants for core events,
+    /// or a game-project constants class for game-specific events.
+    /// </param>
     /// <param name="data">
     /// Optional data object. Pass an anonymous type or a record; the implementation
     /// serializes it. Pass <c>null</c> for events with no payload.

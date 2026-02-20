@@ -1,0 +1,49 @@
+namespace UltraPinball.Core.Game;
+
+/// <summary>
+/// String constants for the core media event types posted by
+/// <see cref="GameController"/> and the built-in framework modes.
+///
+/// <para>
+/// Use these constants (rather than inline string literals) when calling
+/// <see cref="IMediaEventSink.Post"/> so that media controllers and game code
+/// share a single authoritative name for each event. Game projects may define
+/// additional event types in their own static classes following the same pattern.
+/// </para>
+/// </summary>
+public static class MediaEvents
+{
+    // ── Game lifecycle ─────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// A new game has started and the first ball is about to be served.
+    /// Payload: <c>{ player: string, balls_per_game: int }</c>.
+    /// </summary>
+    public const string GameStarted = "game_started";
+
+    /// <summary>
+    /// A ball is about to enter play (hardware may now eject a ball).
+    /// Payload: <c>{ ball: int, player: string }</c>.
+    /// </summary>
+    public const string BallStarting = "ball_starting";
+
+    /// <summary>
+    /// A ball has drained and ball-lifecycle modes are being removed.
+    /// Payload: <c>{ ball: int, player: string, score: long }</c>.
+    /// </summary>
+    public const string BallEnded = "ball_ended";
+
+    /// <summary>
+    /// The final ball of the final player has drained; the game is over.
+    /// Payload: <c>{ scores: [{ name: string, score: long }] }</c>.
+    /// </summary>
+    public const string GameEnded = "game_ended";
+
+    // ── Player management ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// A new player joined during the add-player window (Ball 1, before plunge).
+    /// Payload: <c>{ player: string, total_players: int }</c>.
+    /// </summary>
+    public const string PlayerAdded = "player_added";
+}

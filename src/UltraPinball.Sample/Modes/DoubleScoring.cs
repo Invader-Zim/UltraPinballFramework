@@ -31,13 +31,13 @@ public class DoubleScoring : Mode
         ScheduleTimer();
 
         Log.LogInformation("[DOUBLE SCORING] Started — {Duration}s", DurationSeconds);
-        Game.Media?.Post("double_scoring_started", new { duration_seconds = DurationSeconds });
+        Game.Media?.Post(SampleMediaEvents.DoubleScoringStarted, new { duration_seconds = DurationSeconds });
     }
 
     public override void ModeStopped()
     {
         Log.LogInformation("[DOUBLE SCORING] Ended");
-        Game.Media?.Post("double_scoring_ended", null);
+        Game.Media?.Post(SampleMediaEvents.DoubleScoringEnded);
     }
 
     // ── Internals ─────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ public class DoubleScoring : Mode
     {
         ScheduleTimer();
         Log.LogInformation("[DOUBLE SCORING] Extended — {Duration}s", DurationSeconds);
-        Game.Media?.Post("double_scoring_extended", new { duration_seconds = DurationSeconds });
+        Game.Media?.Post(SampleMediaEvents.DoubleScoringExtended, new { duration_seconds = DurationSeconds });
         return OnScoringSwitch(sw);
     }
 
@@ -67,7 +67,7 @@ public class DoubleScoring : Mode
         Log.LogInformation("[DOUBLE SCORING] +100 bonus from {Source} → {Total:N0}",
             sw.Name, Game.CurrentPlayer.Score);
 
-        Game.Media?.Post("points_scored", new
+        Game.Media?.Post(SampleMediaEvents.PointsScored, new
         {
             player = Game.CurrentPlayer.Name,
             points = 100,

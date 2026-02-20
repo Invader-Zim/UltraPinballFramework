@@ -63,7 +63,7 @@ public class SingleBall : Mode
         Log.LogInformation("[SINGLE BALL] +{Points} from {Source} → {Total:N0}",
             points, source, Game.CurrentPlayer.Score);
 
-        Game.Media?.Post("points_scored", new
+        Game.Media?.Post(SampleMediaEvents.PointsScored, new
         {
             player = Game.CurrentPlayer.Name,
             points,
