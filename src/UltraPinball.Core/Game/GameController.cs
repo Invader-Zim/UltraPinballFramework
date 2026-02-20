@@ -130,7 +130,7 @@ public class GameController
 
     /// <summary>
     /// Called once after hardware is ready, before the game loop starts.
-    /// Override to call <see cref="RegisterMode"/> for all modes used by the game.
+    /// Override to call <see cref="RegisterMode(Mode)"/> for all modes used by the game.
     /// </summary>
     protected virtual void OnStartup() { }
 
@@ -146,7 +146,14 @@ public class GameController
     /// Call this from <see cref="OnStartup"/>. Manual-lifecycle modes may also be passed here
     /// as a no-op registration for book-keeping, or simply managed via <see cref="Modes"/> directly.
     /// </summary>
-    public void RegisterMode(Mode mode, ModeLifecycle lifecycle = ModeLifecycle.Manual)
+    /// <summary>
+    /// Registers a mode using its <see cref="Mode.DefaultLifecycle"/>.
+    /// Prefer this overload — it keeps lifecycle knowledge with the mode itself.
+    /// </summary>
+    public void RegisterMode(Mode mode) => RegisterMode(mode, mode.DefaultLifecycle);
+
+    /// <summary>Registers a mode with an explicit lifecycle, overriding the mode's default.</summary>
+    public void RegisterMode(Mode mode, ModeLifecycle lifecycle)
     {
         _registeredModes.Add((mode, lifecycle));
         if (lifecycle == ModeLifecycle.System)

@@ -12,10 +12,9 @@ public class SampleGame : GameController
 
     protected override void OnStartup()
     {
-        RegisterMode(new AttractMode(),  ModeLifecycle.System);
-        RegisterMode(new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"]),
-                     ModeLifecycle.System);
-        RegisterMode(new AutoLaunchMode(), ModeLifecycle.Ball);
-        RegisterMode(new SingleBall(),    ModeLifecycle.Ball);
+        RegisterMode(new AttractMode());
+        RegisterMode(new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"]));
+        RegisterMode(new AutoLaunchMode());
+        RegisterMode(new SingleBall());
     }
 }

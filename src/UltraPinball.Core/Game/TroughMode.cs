@@ -24,6 +24,9 @@ namespace UltraPinball.Core.Game;
 /// </remarks>
 public class TroughMode : Mode
 {
+    /// <inheritdoc />
+    public override ModeLifecycle DefaultLifecycle => ModeLifecycle.System;
+
     private readonly string[] _troughSwitchNames;
     private readonly string _ejectCoilName;
     private readonly string _shooterLaneSwitchName;

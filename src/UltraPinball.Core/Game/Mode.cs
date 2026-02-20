@@ -56,6 +56,14 @@ public abstract class Mode
     public int Priority { get; }
     public GameController Game { get; private set; } = null!;
 
+    /// <summary>
+    /// The lifecycle this mode expects to be registered with. Override in concrete modes
+    /// so callers can use <see cref="GameController.RegisterMode(Mode)"/> without
+    /// having to specify the lifecycle explicitly — and so tooling/logs can warn if
+    /// the wrong lifecycle is passed to the two-argument overload.
+    /// </summary>
+    public virtual ModeLifecycle DefaultLifecycle => ModeLifecycle.Manual;
+
     private readonly List<RegisteredHandler> _handlers = new();
     private readonly List<PendingDelay> _delays = new();
     private ILogger? _log;

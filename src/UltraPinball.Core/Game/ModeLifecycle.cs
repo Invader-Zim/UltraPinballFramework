@@ -1,7 +1,7 @@
 namespace UltraPinball.Core.Game;
 
 /// <summary>
-/// Controls when a mode registered via <see cref="GameController.RegisterMode"/> is
+/// Controls when a mode registered via <see cref="GameController.RegisterMode(Mode)"/> is
 /// automatically added to and removed from the <see cref="ModeQueue"/>.
 /// </summary>
 public enum ModeLifecycle

@@ -1,24 +1,25 @@
 using Microsoft.Extensions.Logging;
-using UltraPinball.Core.Game;
-using Switch = UltraPinball.Core.Devices.Switch;
+using UltraPinball.Core.Devices;
 
-namespace UltraPinball.Sample.Modes;
+namespace UltraPinball.Core.Game;
 
 /// <summary>
-/// Post-game mode (priority 15). Displays final scores for a brief dwell period,
-/// then removes itself and returns control to <see cref="AttractMode"/>.
+/// Default framework post-game mode (priority 15). Displays final scores for a
+/// brief dwell period, then removes itself and returns control to
+/// <see cref="AttractMode"/>.
 ///
 /// <para>
 /// Pressing Start during the dwell skips immediately to a new game: this mode
 /// dismisses itself and returns <see cref="SwitchHandlerResult.Continue"/> so
-/// <see cref="AttractMode"/> sees the event and calls <see cref="GameController.StartGame"/>.
+/// <see cref="AttractMode"/> sees the event and calls
+/// <see cref="GameController.StartGame"/>.
 /// </para>
 /// </summary>
 public class GameOverMode : Mode
 {
     /// <summary>
     /// Fired when the dwell timer elapses and this mode removes itself naturally.
-    /// Not fired when Start is pressed (the game begins immediately in that case).
+    /// Not fired when Start is pressed to immediately begin a new game.
     /// </summary>
     public event Action? Completed;
 

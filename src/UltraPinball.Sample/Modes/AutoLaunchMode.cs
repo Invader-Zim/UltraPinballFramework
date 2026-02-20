@@ -10,6 +10,9 @@ namespace UltraPinball.Sample.Modes;
 /// </summary>
 public class AutoLaunchMode : Mode
 {
+    /// <inheritdoc />
+    public override ModeLifecycle DefaultLifecycle => ModeLifecycle.Ball;
+
     public AutoLaunchMode() : base(priority: 50) { }
 
     public override void ModeStarted()

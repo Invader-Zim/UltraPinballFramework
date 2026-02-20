@@ -10,6 +10,9 @@ namespace UltraPinball.Sample.Modes;
 /// </summary>
 public class SingleBall : Mode
 {
+    /// <inheritdoc />
+    public override ModeLifecycle DefaultLifecycle => ModeLifecycle.Ball;
+
     private readonly DoubleScoring _doubleScoring = new();
 
     public SingleBall() : base(priority: 20) { }
