@@ -46,10 +46,7 @@ public class SingleBall : Mode
     {
         AwardPoints(100, sw.Name);
 
-        // Start DoubleScoring on first hit; extend the timer on subsequent hits.
-        if (Game.Modes.Contains(_doubleScoring))
-            _doubleScoring.Extend();
-        else
+        if (!Game.Modes.Contains(_doubleScoring))
             Game.Modes.Add(_doubleScoring);
 
         return SwitchHandlerResult.Continue;

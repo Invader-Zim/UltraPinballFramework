@@ -22,7 +22,7 @@ public class DoubleScoring : Mode
     public override void ModeStarted()
     {
         AddSwitchHandler("LeftOutlane",  SwitchActivation.Active, OnScoringSwitch);
-        AddSwitchHandler("LeftInlane",   SwitchActivation.Active, OnScoringSwitch);
+        AddSwitchHandler("LeftInlane",   SwitchActivation.Active, OnLeftInlane);
         AddSwitchHandler("LeftSling",    SwitchActivation.Active, OnScoringSwitch);
         AddSwitchHandler("RightOutlane", SwitchActivation.Active, OnScoringSwitch);
         AddSwitchHandler("RightInlane",  SwitchActivation.Active, OnScoringSwitch);
@@ -40,15 +40,15 @@ public class DoubleScoring : Mode
         Game.Media?.Post("double_scoring_ended", null);
     }
 
-    /// <summary>Resets the expiry timer back to full duration.</summary>
-    public void Extend()
+    // ── Internals ─────────────────────────────────────────────────────────────
+
+    private SwitchHandlerResult OnLeftInlane(Switch sw)
     {
         ScheduleTimer();
         Log.LogInformation("[DOUBLE SCORING] Extended — {Duration}s", DurationSeconds);
         Game.Media?.Post("double_scoring_extended", new { duration_seconds = DurationSeconds });
+        return OnScoringSwitch(sw);
     }
-
-    // ── Internals ─────────────────────────────────────────────────────────────
 
     private void ScheduleTimer()
     {
