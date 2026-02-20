@@ -21,6 +21,7 @@ var machine = new SampleMachine();
 //   Z / X      = Left / Right flipper
 //   A / '      = Left / Right inlane
 //   Q / P      = Left / Right outlane
+//   W / O      = Left / Right sling
 //   D          = ShooterLane (simulate ball arriving / leaving)
 //   1–5        = Trough0–4  (simulate a drain)
 
@@ -30,11 +31,13 @@ var platform = new SimulatorPlatform()
     // Flippers
     .MapKey(ConsoleKey.Z,    switchHwNumber: 0x05, label: "LeftFlipper")
     .MapKey(ConsoleKey.X,    switchHwNumber: 0x0A, label: "RightFlipper")
-    // Inlanes / outlanes
+    // Inlanes / outlanes / slings
     .MapKey(ConsoleKey.A,    switchHwNumber: 0x02, label: "LeftInlane")
     .MapKey(ConsoleKey.Oem7, switchHwNumber: 0x07, label: "RightInlane")
     .MapKey(ConsoleKey.Q,    switchHwNumber: 0x01, label: "LeftOutlane")
     .MapKey(ConsoleKey.P,    switchHwNumber: 0x06, label: "RightOutlane")
+    .MapKey(ConsoleKey.W,    switchHwNumber: 0x04, label: "LeftSling")
+    .MapKey(ConsoleKey.O,    switchHwNumber: 0x09, label: "RightSling")
     // Ball path
     .MapKey(ConsoleKey.D,    switchHwNumber: 0x00, label: "ShooterLane")
     // Trough drain simulation
