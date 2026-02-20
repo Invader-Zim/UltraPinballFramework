@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.Tests", "tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.MediaBridge", "src\UltraPinball.MediaBridge\UltraPinball.MediaBridge.csproj", "{187E0DD7-5A2E-4D70-8C03-F466C6A1DFB9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UltraPinball.MediaController", "src\UltraPinball.MediaController\UltraPinball.MediaController.csproj", "{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -52,6 +54,10 @@ Global
 		{187E0DD7-5A2E-4D70-8C03-F466C6A1DFB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{187E0DD7-5A2E-4D70-8C03-F466C6A1DFB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{187E0DD7-5A2E-4D70-8C03-F466C6A1DFB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FA091C9F-A426-4A36-8121-4B534AAD6D6D} = {30AC54BC-4956-4351-922D-547C3B1FB944}
@@ -60,5 +66,6 @@ Global
 		{624D94F9-C13A-4FBD-8CEE-98BB8FB0BA75} = {30AC54BC-4956-4351-922D-547C3B1FB944}
 		{AC278ED2-89FE-4FC1-8CD2-89192AF22031} = {B259056A-A74A-4F8B-B3D0-D72AA8A128B2}
 		{187E0DD7-5A2E-4D70-8C03-F466C6A1DFB9} = {30AC54BC-4956-4351-922D-547C3B1FB944}
+		{5C1A9E8B-D347-4F2C-B8A6-1E3F7C05D9B2} = {30AC54BC-4956-4351-922D-547C3B1FB944}
 	EndGlobalSection
 EndGlobal

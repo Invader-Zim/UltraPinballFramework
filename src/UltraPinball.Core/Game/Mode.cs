@@ -171,7 +171,7 @@ public abstract class Mode
 
         var result = SwitchHandlerResult.Continue;
 
-        foreach (var h in _handlers)
+        foreach (var h in _handlers.ToList())
         {
             if (h.SwitchName != sw.Name) continue;
             if (!IsMatchingActivation(sw, h.Activation, newState)) continue;

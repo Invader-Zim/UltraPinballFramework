@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\UltraPinball.Core\UltraPinball.Core.csproj" />
+    <ProjectReference Include="..\UltraPinball.MediaBridge\UltraPinball.MediaBridge.csproj" />
     <ProjectReference Include="..\UltraPinball.Platforms.Fast\UltraPinball.Platforms.Fast.csproj" />
     <ProjectReference Include="..\UltraPinball.Simulator\UltraPinball.Simulator.csproj" />
   </ItemGroup>

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using UltraPinball.Core.Devices;
+using UltraPinball.MediaBridge;
 using UltraPinball.Sample;
 using UltraPinball.Simulator;
 
@@ -52,6 +53,20 @@ var platform = new SimulatorPlatform()
 // ── Game ──────────────────────────────────────────────────────────────────────
 
 var game = new SampleGame(machine, platform, loggerFactory);
+
+// ── Media ─────────────────────────────────────────────────────────────────────
+// Start UltraPinball.MediaController on port 9000 to receive these events.
+
+using var media = new MediaBridgeClient { Host = "127.0.0.1", Port = 9000, ConnectTimeout = TimeSpan.FromSeconds(2) };
+if (await media.ConnectAsync("UltraPinball.Sample", "1.0", "1.0", []))
+{
+    Console.WriteLine("[Media] Connected to MediaController.");
+    game.Media = media;
+}
+else
+{
+    Console.WriteLine("[Media] MediaController not found — running without media.");
+}
 
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };

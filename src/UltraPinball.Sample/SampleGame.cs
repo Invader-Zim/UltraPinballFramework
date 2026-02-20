@@ -16,5 +16,6 @@ public class SampleGame : GameController
         RegisterMode(new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"]),
                      ModeLifecycle.System);
         RegisterMode(new AutoLaunchMode(), ModeLifecycle.Ball);
+        RegisterMode(new SingleBall(),    ModeLifecycle.Ball);
     }
 }
