@@ -23,6 +23,12 @@ public class GameController
     public ModeQueue Modes { get; }
     public IHardwarePlatform Hardware { get; }
 
+    /// <summary>
+    /// Optional media event sink. Set this before <see cref="RunAsync"/> to enable
+    /// media output. When <c>null</c> all <c>Media?.Post()</c> calls are no-ops.
+    /// </summary>
+    public IMediaEventSink? Media { get; set; }
+
     // ── Game state ────────────────────────────────────────────────────────────
 
     public IReadOnlyList<Player> Players => _players;
@@ -175,6 +181,7 @@ public class GameController
         Ball = 1;
         AddPlayer();
         _log.LogInformation("Game started.");
+        Media?.Post("game_started", new { player = CurrentPlayer?.Name, balls_per_game = BallsPerGame });
         GameStarted?.Invoke();
         foreach (var (mode, lc) in _registeredModes)
             if (lc == ModeLifecycle.Game)
@@ -189,6 +196,7 @@ public class GameController
                 Modes.Add(mode);
         _ballStartTime = DateTime.UtcNow;
         _log.LogInformation("Ball {Ball} starting for {Player}.", Ball, CurrentPlayer?.Name);
+        Media?.Post("ball_starting", new { ball = Ball, player = CurrentPlayer?.Name });
         BallStarting?.Invoke(Ball);
     }
 
@@ -203,6 +211,7 @@ public class GameController
             CurrentPlayer.GameTime += DateTime.UtcNow - _ballStartTime;
 
         _log.LogInformation("Ball {Ball} ended. Score: {Score}", Ball, CurrentPlayer?.Score);
+        Media?.Post("ball_ended", new { ball = Ball, player = CurrentPlayer?.Name, score = CurrentPlayer?.Score });
         BallEnded?.Invoke(Ball);
 
         foreach (var (mode, lc) in _registeredModes)
@@ -237,6 +246,7 @@ public class GameController
         foreach (var (mode, lc) in _registeredModes)
             if (lc == ModeLifecycle.Game)
                 Modes.Remove(mode);
+        Media?.Post("game_ended", new { scores = Players.Select(p => new { name = p.Name, score = p.Score }).ToArray() });
         _log.LogInformation("Game ended.");
         Ball = 0;
         GameEnded?.Invoke();
