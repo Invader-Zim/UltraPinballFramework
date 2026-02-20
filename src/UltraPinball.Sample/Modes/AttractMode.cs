@@ -27,12 +27,22 @@ public class AttractMode : Mode
 
     private SwitchHandlerResult OnStartPressed(Switch sw)
     {
-        if (Game.IsGameInProgress)
-            return SwitchHandlerResult.Continue;
+        if (!Game.IsGameInProgress)
+        {
+            Log.LogInformation("[ATTRACT] Start — starting game!");
+            Game.StartGame();
+            return SwitchHandlerResult.Stop;
+        }
 
-        Log.LogInformation("[ATTRACT] Start — starting game!");
-        Game.StartGame();
-        return SwitchHandlerResult.Stop;
+        if (Game.Ball == 1 && Game.Players.Count < Game.MaxPlayers)
+        {
+            var player = Game.AddPlayer();
+            Log.LogInformation("[ATTRACT] Player {Number} added.", Game.Players.Count);
+            Game.Media?.Post("player_added", new { player = player.Name, total_players = Game.Players.Count });
+            return SwitchHandlerResult.Stop;
+        }
+
+        return SwitchHandlerResult.Continue;
     }
 
     private void OnGameEnded()
