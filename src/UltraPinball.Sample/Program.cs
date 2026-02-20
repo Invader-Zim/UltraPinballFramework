@@ -26,23 +26,23 @@ var machine = new SampleMachine();
 
 var platform = new SimulatorPlatform()
     // Cabinet
-    .MapKey(ConsoleKey.S,    switchHwNumber: 0x0B)  // Start
+    .MapKey(ConsoleKey.S,    switchHwNumber: 0x0B, label: "Start")
     // Flippers
-    .MapKey(ConsoleKey.Z,    switchHwNumber: 0x05)  // LeftFlipper
-    .MapKey(ConsoleKey.X,    switchHwNumber: 0x0A)  // RightFlipper
+    .MapKey(ConsoleKey.Z,    switchHwNumber: 0x05, label: "LeftFlipper")
+    .MapKey(ConsoleKey.X,    switchHwNumber: 0x0A, label: "RightFlipper")
     // Inlanes / outlanes
-    .MapKey(ConsoleKey.A,    switchHwNumber: 0x02)  // LeftInlane
-    .MapKey(ConsoleKey.Oem7, switchHwNumber: 0x07)  // RightInlane  (apostrophe)
-    .MapKey(ConsoleKey.Q,    switchHwNumber: 0x01)  // LeftOutlane
-    .MapKey(ConsoleKey.P,    switchHwNumber: 0x06)  // RightOutlane
+    .MapKey(ConsoleKey.A,    switchHwNumber: 0x02, label: "LeftInlane")
+    .MapKey(ConsoleKey.Oem7, switchHwNumber: 0x07, label: "RightInlane")
+    .MapKey(ConsoleKey.Q,    switchHwNumber: 0x01, label: "LeftOutlane")
+    .MapKey(ConsoleKey.P,    switchHwNumber: 0x06, label: "RightOutlane")
     // Ball path
-    .MapKey(ConsoleKey.D,    switchHwNumber: 0x00)  // ShooterLane
+    .MapKey(ConsoleKey.D,    switchHwNumber: 0x00, label: "ShooterLane")
     // Trough drain simulation
-    .MapKey(ConsoleKey.D1,   switchHwNumber: 0x10)  // Trough0
-    .MapKey(ConsoleKey.D2,   switchHwNumber: 0x11)  // Trough1
-    .MapKey(ConsoleKey.D3,   switchHwNumber: 0x12)  // Trough2
-    .MapKey(ConsoleKey.D4,   switchHwNumber: 0x13)  // Trough3
-    .MapKey(ConsoleKey.D5,   switchHwNumber: 0x14)  // Trough4
+    .MapKey(ConsoleKey.D1,   switchHwNumber: 0x10, label: "Trough0")
+    .MapKey(ConsoleKey.D2,   switchHwNumber: 0x11, label: "Trough1")
+    .MapKey(ConsoleKey.D3,   switchHwNumber: 0x12, label: "Trough2")
+    .MapKey(ConsoleKey.D4,   switchHwNumber: 0x13, label: "Trough3")
+    .MapKey(ConsoleKey.D5,   switchHwNumber: 0x14, label: "Trough4")
     // Trough starts full — 5 balls present, NC optos open (beam broken)
     .SetInitialState(0x10, SwitchState.Open)
     .SetInitialState(0x11, SwitchState.Open)

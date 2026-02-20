@@ -20,6 +20,7 @@ public class SimulatorPlatform : IHardwarePlatform
     public event Action<int, SwitchState>? SwitchChanged;
 
     private readonly Dictionary<ConsoleKey, int> _keyMappings = new();
+    private readonly Dictionary<ConsoleKey, string> _keyLabels = new();
     private readonly Dictionary<int, SwitchState> _initialStates = new();
     private readonly Dictionary<int, SwitchState> _currentStates = new();
     private CancellationTokenSource? _cts;
@@ -28,9 +29,11 @@ public class SimulatorPlatform : IHardwarePlatform
 
     /// <summary>Maps a console key to a switch hardware number. Each keypress simulates
     /// a brief contact (close → 50ms → open), like a ball hitting a switch.</summary>
-    public SimulatorPlatform MapKey(ConsoleKey key, int switchHwNumber)
+    /// <param name="label">Optional switch name shown in the startup key-map printout.</param>
+    public SimulatorPlatform MapKey(ConsoleKey key, int switchHwNumber, string? label = null)
     {
         _keyMappings[key] = switchHwNumber;
+        if (label != null) _keyLabels[key] = label;
         return this;
     }
 
@@ -168,6 +171,9 @@ public class SimulatorPlatform : IHardwarePlatform
         if (_keyMappings.Count == 0) return;
         SimLog("Key mappings:");
         foreach (var (key, hw) in _keyMappings)
-            SimLog($"  {key} → sw 0x{hw:X2}");
+        {
+            var label = _keyLabels.TryGetValue(key, out var l) ? $" ({l})" : "";
+            SimLog($"  {(char)key} → sw 0x{hw:X2}{label}");
+        }
     }
 }
