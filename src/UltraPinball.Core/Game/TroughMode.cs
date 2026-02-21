@@ -19,8 +19,15 @@ namespace UltraPinball.Core.Game;
 /// </para>
 /// </summary>
 /// <remarks>
-/// Override <see cref="OnBallDrained"/> to add ball-save logic, multiball drain tracking,
-/// or any other behaviour before calling <see cref="GameController.EndBall"/>.
+/// <para>
+/// <b>Ball save:</b> Set <see cref="AutoBallSaveSeconds"/> to automatically open a save
+/// window on each ball launch, or call <see cref="StartBallSave"/> manually from game code.
+/// While the window is open, any drain re-ejects the ball instead of ending the ball.
+/// </para>
+/// <para>
+/// Override <see cref="OnBallDrained"/> to add multiball drain tracking or other
+/// pre-drain logic. Call <see cref="GameController.EndBall"/> when ready.
+/// </para>
 /// </remarks>
 public class TroughMode : Mode
 {
@@ -33,6 +40,48 @@ public class TroughMode : Mode
 
     private bool _ballInPlay;
     private bool _launching;
+
+    // ── Ball save ─────────────────────────────────────────────────────────────
+
+    private const string BallSaveDelayName = "ball_save";
+
+    /// <summary>
+    /// True while the ball save window is open. Any drain during this window
+    /// re-ejects the ball instead of ending it.
+    /// </summary>
+    public bool BallSaveActive => IsDelayed(BallSaveDelayName);
+
+    /// <summary>
+    /// When greater than zero, ball save automatically opens for this many seconds
+    /// each time <see cref="GameController.BallStarting"/> fires.
+    /// Set to 0 (the default) to disable auto-start.
+    /// </summary>
+    public float AutoBallSaveSeconds { get; set; } = 0f;
+
+    /// <summary>Fired each time a drain is intercepted and the ball is re-ejected.</summary>
+    public event Action? BallSaved;
+
+    /// <summary>
+    /// Fired when the ball save window closes naturally after its duration elapses.
+    /// Not raised when <see cref="StopBallSave"/> is called explicitly.
+    /// </summary>
+    public event Action? BallSaveExpired;
+
+    /// <summary>
+    /// Opens the ball save window for the specified duration.
+    /// If already open, restarts the timer.
+    /// </summary>
+    /// <param name="seconds">How long the save window should remain open.</param>
+    public void StartBallSave(float seconds) =>
+        Delay(seconds, OnBallSaveTimerExpired, BallSaveDelayName);
+
+    /// <summary>
+    /// Closes the ball save window immediately.
+    /// <see cref="BallSaveExpired"/> is not raised.
+    /// </summary>
+    public void StopBallSave() => CancelDelay(BallSaveDelayName);
+
+    // ── Constructor ───────────────────────────────────────────────────────────
 
     /// <summary>
     /// Initialises a new TroughMode.
@@ -77,16 +126,18 @@ public class TroughMode : Mode
     private void OnBallStarting(int ball)
     {
         _ballInPlay = false;
-        _launching = true;
+        _launching  = true;
         Log.LogDebug("TroughMode: ejecting ball {Ball}.", ball);
         Game.Coils[_ejectCoilName].Pulse();
+        if (AutoBallSaveSeconds > 0)
+            StartBallSave(AutoBallSaveSeconds);
     }
 
     private SwitchHandlerResult OnShooterLaneInactive(Switch sw)
     {
         if (_launching && Game.IsGameInProgress)
         {
-            _launching = false;
+            _launching  = false;
             _ballInPlay = true;
             Log.LogDebug("TroughMode: ball in play.");
         }
@@ -105,15 +156,33 @@ public class TroughMode : Mode
         return SwitchHandlerResult.Stop;
     }
 
+    private void OnBallSaveTimerExpired()
+    {
+        Log.LogDebug("TroughMode: ball save expired.");
+        BallSaveExpired?.Invoke();
+    }
+
     // ── Overridable drain callback ─────────────────────────────────────────────
 
     /// <summary>
-    /// Called when a ball drain is confirmed. Default implementation calls
-    /// <see cref="GameController.EndBall"/> immediately.
+    /// Called when a ball drain is confirmed. Checks ball save first; if active,
+    /// re-ejects the ball and fires <see cref="BallSaved"/>. Otherwise calls
+    /// <see cref="GameController.EndBall"/>.
     ///
-    /// Override to implement ball save, multiball drain tracking, or other
-    /// pre-drain logic. Call <see cref="GameController.EndBall"/> when ready.
+    /// Override to add multiball drain tracking or other pre-drain logic.
+    /// Call <see cref="GameController.EndBall"/> when ready to end the ball.
     /// </summary>
     /// <param name="sw">The trough switch that triggered the drain.</param>
-    protected virtual void OnBallDrained(Switch sw) => Game.EndBall();
+    protected virtual void OnBallDrained(Switch sw)
+    {
+        if (BallSaveActive)
+        {
+            Log.LogInformation("Ball saved!");
+            _launching = true;
+            Game.Coils[_ejectCoilName].Pulse();
+            BallSaved?.Invoke();
+            return;
+        }
+        Game.EndBall();
+    }
 }
