@@ -28,6 +28,9 @@ public class SampleGame : GameController
         tilt.Tilted += () => trough.StopBallSave();
         RegisterMode(tilt);
 
+        RegisterMode(new BallSearchMode(
+            searchCoilNames: ["LeftSlingCoil", "RightSlingCoil"]));
+
         RegisterMode(new AutoLaunchMode());
         RegisterMode(new SingleBall());
     }

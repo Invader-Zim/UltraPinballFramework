@@ -74,4 +74,18 @@ public static class MediaEvents
     /// No payload.
     /// </summary>
     public const string SlamTilted = "slam_tilt";
+
+    // ── Ball search ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// No playfield switch has fired for the configured timeout — ball search has begun.
+    /// No payload.
+    /// </summary>
+    public const string BallSearchStarted = "ball_search_started";
+
+    /// <summary>
+    /// A playfield switch fired during ball search — the ball has been found and the search stopped.
+    /// No payload.
+    /// </summary>
+    public const string BallSearchStopped = "ball_search_stopped";
 }
