@@ -18,12 +18,14 @@ var machine = new SampleMachine();
 //
 // Keyboard layout (US):
 //   S          = Start
-//   Z / X      = Left / Right flipper
-//   A / '      = Left / Right inlane
+//   Z / M      = Left / Right flipper
+//   A / L      = Left / Right inlane
 //   Q / P      = Left / Right outlane
 //   W / O      = Left / Right sling
 //   D          = ShooterLane (simulate ball arriving / leaving)
 //   1–5        = Trough0–4  (simulate a drain)
+//   T          = Tilt bob (repeat to exhaust warnings then tilt)
+//   Y          = Slam tilt (ends game immediately)
 
 var platform = new SimulatorPlatform()
     // Cabinet
@@ -46,6 +48,9 @@ var platform = new SimulatorPlatform()
     .MapKey(ConsoleKey.D3,   switchHwNumber: 0x12, label: "Trough2")
     .MapKey(ConsoleKey.D4,   switchHwNumber: 0x13, label: "Trough3")
     .MapKey(ConsoleKey.D5,   switchHwNumber: 0x14, label: "Trough4")
+    // Tilt / slam tilt
+    .MapKey(ConsoleKey.T,    switchHwNumber: 0x0C, label: "Tilt")
+    .MapKey(ConsoleKey.Y,    switchHwNumber: 0x0D, label: "SlamTilt")
     // Trough starts full — 5 balls present, NC optos open (beam broken)
     .SetInitialState(0x10, SwitchState.Open)
     .SetInitialState(0x11, SwitchState.Open)

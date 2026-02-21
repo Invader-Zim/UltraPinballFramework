@@ -54,4 +54,24 @@ public static class MediaEvents
     /// a game-over dwell completes. No payload.
     /// </summary>
     public const string AttractIdle = "attract_idle";
+
+    // ── Tilt ───────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// A tilt warning was issued. The ball is still in play.
+    /// Payload: <c>{ warning: int, allowed: int }</c>.
+    /// </summary>
+    public const string TiltWarning = "tilt_warning";
+
+    /// <summary>
+    /// The ball has tilted — flippers are disabled and no bonus will be awarded.
+    /// No payload.
+    /// </summary>
+    public const string Tilted = "tilt";
+
+    /// <summary>
+    /// The slam-tilt switch fired — the entire game is ending immediately.
+    /// No payload.
+    /// </summary>
+    public const string SlamTilted = "slam_tilt";
 }

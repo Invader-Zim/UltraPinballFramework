@@ -41,6 +41,8 @@ public class SampleMachine : MachineConfig
 
         // ── Cabinet ───────────────────────────────────────────────────────────
         AddSwitch("Start",          hwNumber: 0x0B);
+        AddSwitch("Tilt",           hwNumber: 0x0C);
+        AddSwitch("SlamTilt",       hwNumber: 0x0D);
 
         // ── Trough (5-ball, normally-closed opto switches) ────────────────────
         // Active = Open = beam broken = ball present.

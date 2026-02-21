@@ -13,10 +13,22 @@ public class SampleGame : GameController
     protected override void OnStartup()
     {
         RegisterMode(new AttractMode());
-        RegisterMode(new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"])
+
+        var trough = new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"])
         {
             AutoBallSaveSeconds = 8f
-        });
+        };
+        RegisterMode(trough);
+
+        var tilt = new TiltMode("Tilt", slamTiltSwitchName: "SlamTilt",
+            flippers:
+            [
+                new FlipperConfig("LeftFlipper",  "LeftFlipperMain",  PulseMs: 30),
+                new FlipperConfig("RightFlipper", "RightFlipperMain", PulseMs: 30),
+            ]);
+        tilt.Tilted += () => trough.StopBallSave();
+        RegisterMode(tilt);
+
         RegisterMode(new AutoLaunchMode());
         RegisterMode(new SingleBall());
     }
