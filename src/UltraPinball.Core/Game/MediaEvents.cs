@@ -89,6 +89,26 @@ public static class MediaEvents
     /// </summary>
     public const string MultiBallEnded = "multiball_ended";
 
+    // ── Bonus ──────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// End-of-ball bonus countdown started.
+    /// Payload: <c>{ bonus: long, multiplier: int, total: long }</c>.
+    /// </summary>
+    public const string BonusStarted = "bonus_started";
+
+    /// <summary>
+    /// One countdown step completed — points have been awarded to the player.
+    /// Payload: <c>{ awarded: long, remaining: long }</c>.
+    /// </summary>
+    public const string BonusStep = "bonus_step";
+
+    /// <summary>
+    /// Bonus countdown finished — all bonus points have been awarded.
+    /// Payload: <c>{ awarded: long }</c>.
+    /// </summary>
+    public const string BonusCompleted = "bonus_completed";
+
     // ── Ball search ────────────────────────────────────────────────────────────
 
     /// <summary>

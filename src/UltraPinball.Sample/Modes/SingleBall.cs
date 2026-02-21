@@ -14,8 +14,9 @@ public class SingleBall : Mode
     public override ModeLifecycle DefaultLifecycle => ModeLifecycle.Ball;
 
     private readonly DoubleScoring _doubleScoring = new();
+    private readonly BonusMode?   _bonus;
 
-    public SingleBall() : base(priority: 20) { }
+    public SingleBall(BonusMode? bonus = null) : base(priority: 20) { _bonus = bonus; }
 
     public override void ModeStarted()
     {
@@ -60,6 +61,7 @@ public class SingleBall : Mode
 
         Game.CurrentPlayer.Score += points;
         Game.CurrentPlayer.IncrementBallState("hits");
+        _bonus?.AddBonus(points);
 
         var hits = Game.CurrentPlayer.GetBallState<long>("hits");
 

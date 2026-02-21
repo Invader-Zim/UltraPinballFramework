@@ -31,7 +31,17 @@ public class SampleGame : GameController
         RegisterMode(new BallSearchMode(
             searchCoilNames: ["LeftSlingCoil", "RightSlingCoil"]));
 
+        var bonus = new BonusMode();
+        trough.BallDrained += () =>
+        {
+            if (tilt.IsTilted)
+                EndBall();           // skip bonus after tilt — ball already penalised
+            else
+                bonus.StartBonus();
+        };
+        RegisterMode(bonus);
+
         RegisterMode(new AutoLaunchMode());
-        RegisterMode(new SingleBall());
+        RegisterMode(new SingleBall(bonus));
     }
 }

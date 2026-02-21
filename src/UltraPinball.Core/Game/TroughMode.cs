@@ -69,6 +69,14 @@ public class TroughMode : Mode
     public event Action? BallSaved;
 
     /// <summary>
+    /// Fired when the last ball drains and ball save is not active.
+    /// If subscribed, the subscriber is responsible for eventually calling
+    /// <see cref="GameController.EndBall"/>. If no subscriber is attached,
+    /// <see cref="GameController.EndBall"/> is called immediately.
+    /// </summary>
+    public event Action? BallDrained;
+
+    /// <summary>
     /// Fired when the ball save window closes naturally after its duration elapses.
     /// Not raised when <see cref="StopBallSave"/> is called explicitly.
     /// </summary>
@@ -235,6 +243,10 @@ public class TroughMode : Mode
             BallSaved?.Invoke();
             return;
         }
-        Game.EndBall();
+
+        if (BallDrained != null)
+            BallDrained.Invoke();
+        else
+            Game.EndBall();
     }
 }
