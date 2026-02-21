@@ -171,11 +171,11 @@ public abstract class Mode
     /// </summary>
     internal SwitchHandlerResult HandleSwitchEvent(Switch sw, SwitchState newState)
     {
-        // Cancel any timed delays for this switch that are waiting for the opposite state
+        // Cancel any timed delays for this switch whose cancel trigger fires on this event
         _delays.RemoveAll(d =>
             d.CancelTrigger != null &&
             d.CancelTrigger.SwitchName == sw.Name &&
-            !IsMatchingActivation(sw, d.CancelTrigger.Activation, newState));
+            IsMatchingActivation(sw, d.CancelTrigger.Activation, newState));
 
         var result = SwitchHandlerResult.Continue;
 
