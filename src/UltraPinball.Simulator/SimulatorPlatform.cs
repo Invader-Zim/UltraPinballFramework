@@ -10,6 +10,12 @@ namespace UltraPinball.Simulator;
 /// Keyboard keys trigger switch events. All coil and LED actions are
 /// printed to the console.
 ///
+/// Hardware rules are enforced in simulation:
+/// - Flipper rules fire the coil on switch close and disable on open.
+/// - Bumper/sling rules pulse the coil on switch close.
+/// - Flipper-mapped keys toggle (press to raise, press again to lower)
+///   so the flipper stays up while you play, rather than pulsing for 50 ms.
+///
 /// Usage:
 ///   var sim = new SimulatorPlatform();
 ///   sim.MapKey(ConsoleKey.Z, switchHwNumber: 0x00);   // Z key → switch 0
@@ -19,16 +25,33 @@ public class SimulatorPlatform : IHardwarePlatform
 {
     public event Action<int, SwitchState>? SwitchChanged;
 
-    private readonly Dictionary<ConsoleKey, int> _keyMappings = new();
-    private readonly Dictionary<ConsoleKey, string> _keyLabels = new();
+    private readonly Dictionary<ConsoleKey, int> _keyMappings  = new();
+    private readonly Dictionary<ConsoleKey, string> _keyLabels  = new();
     private readonly Dictionary<int, SwitchState> _initialStates = new();
     private readonly Dictionary<int, SwitchState> _currentStates = new();
     private CancellationTokenSource? _cts;
 
+    // ── Hardware rule storage ─────────────────────────────────────────────────
+
+    private record FlipperRule(int MainCoilHw, int PulseMs, float HoldPower);
+    private record BumperRule(int CoilHw, int PulseMs);
+
+    private readonly Dictionary<int, FlipperRule> _flipperRules = new();
+    private readonly Dictionary<int, BumperRule>  _bumperRules  = new();
+
+    // ── Coil log (for test assertions) ───────────────────────────────────────
+
+    /// <summary>
+    /// Records every coil action as a short string (e.g. "PULSE 0x00 30ms").
+    /// Not cleared automatically — tests should read or clear this as needed.
+    /// </summary>
+    public List<string> CoilLog { get; } = new();
+
     // ── Configuration ─────────────────────────────────────────────────────────
 
     /// <summary>Maps a console key to a switch hardware number. Each keypress simulates
-    /// a brief contact (close → 50ms → open), like a ball hitting a switch.</summary>
+    /// a brief contact (close → 50ms → open), like a ball hitting a switch.
+    /// Flipper-rule switches are an exception: they toggle instead of pulsing.</summary>
     /// <param name="label">Optional switch name shown in the startup key-map printout.</param>
     public SimulatorPlatform MapKey(ConsoleKey key, int switchHwNumber, string? label = null)
     {
@@ -78,28 +101,47 @@ public class SimulatorPlatform : IHardwarePlatform
 
     // ── Coil control ──────────────────────────────────────────────────────────
 
-    public void PulseCoil(int hwNumber, int milliseconds) =>
-        SimLog($"[COIL] 0x{hwNumber:X2} PULSE {milliseconds}ms");
+    public void PulseCoil(int hwNumber, int milliseconds)
+    {
+        var entry = $"PULSE 0x{hwNumber:X2} {milliseconds}ms";
+        CoilLog.Add(entry);
+        SimLog($"[COIL] {entry}");
+    }
 
-    public void HoldCoil(int hwNumber) =>
-        SimLog($"[COIL] 0x{hwNumber:X2} HOLD");
+    public void HoldCoil(int hwNumber)
+    {
+        var entry = $"HOLD 0x{hwNumber:X2}";
+        CoilLog.Add(entry);
+        SimLog($"[COIL] {entry}");
+    }
 
-    public void DisableCoil(int hwNumber) =>
-        SimLog($"[COIL] 0x{hwNumber:X2} DISABLE");
+    public void DisableCoil(int hwNumber)
+    {
+        var entry = $"DISABLE 0x{hwNumber:X2}";
+        CoilLog.Add(entry);
+        SimLog($"[COIL] {entry}");
+    }
 
     // ── Hardware rules ────────────────────────────────────────────────────────
 
-    public void ConfigureFlipperRule(int switchHw, int mainCoilHw, int? holdCoilHw,
-                                     int pulseMs, float holdPower = 0.25f) =>
-        SimLog($"[RULE] Flipper: sw=0x{switchHw:X2} → main=0x{mainCoilHw:X2}" +
-               (holdCoilHw.HasValue ? $" hold=0x{holdCoilHw.Value:X2}" : "") +
-               $" pulse={pulseMs}ms hold={holdPower:P0}");
+    public void ConfigureFlipperRule(int switchHw, int mainCoilHw, int pulseMs, float holdPower = 0.25f)
+    {
+        _flipperRules[switchHw] = new FlipperRule(mainCoilHw, pulseMs, holdPower);
+        SimLog($"[RULE] Flipper: sw=0x{switchHw:X2} → coil=0x{mainCoilHw:X2} pulse={pulseMs}ms hold={holdPower:P0}");
+    }
 
-    public void ConfigureBumperRule(int switchHw, int coilHw, int pulseMs) =>
+    public void ConfigureBumperRule(int switchHw, int coilHw, int pulseMs)
+    {
+        _bumperRules[switchHw] = new BumperRule(coilHw, pulseMs);
         SimLog($"[RULE] Bumper: sw=0x{switchHw:X2} → coil=0x{coilHw:X2} pulse={pulseMs}ms");
+    }
 
-    public void RemoveHardwareRule(int switchHw) =>
+    public void RemoveHardwareRule(int switchHw)
+    {
+        _flipperRules.Remove(switchHw);
+        _bumperRules.Remove(switchHw);
         SimLog($"[RULE] Removed rule for sw=0x{switchHw:X2}");
+    }
 
     // ── LEDs ──────────────────────────────────────────────────────────────────
 
@@ -117,12 +159,27 @@ public class SimulatorPlatform : IHardwarePlatform
 
     // ── Direct switch triggering (useful in tests) ────────────────────────────
 
-    /// <summary>Directly sets a switch state without keyboard interaction. Thread-safe.</summary>
+    /// <summary>
+    /// Directly sets a switch state without keyboard interaction. Thread-safe.
+    /// If a hardware rule is configured for this switch, the corresponding coil
+    /// action fires automatically — matching what real hardware would do.
+    /// </summary>
     public void TriggerSwitch(int hwNumber, SwitchState state)
     {
         _currentStates[hwNumber] = state;
         SimLog($"[SW]   0x{hwNumber:X2} → {state}");
         SwitchChanged?.Invoke(hwNumber, state);
+
+        // Enforce hardware rules — fire coils exactly as the board would.
+        if (_flipperRules.TryGetValue(hwNumber, out var fr))
+        {
+            if (state == SwitchState.Closed) PulseCoil(fr.MainCoilHw, fr.PulseMs);
+            else                             DisableCoil(fr.MainCoilHw);
+        }
+        else if (_bumperRules.TryGetValue(hwNumber, out var br) && state == SwitchState.Closed)
+        {
+            PulseCoil(br.CoilHw, br.PulseMs);
+        }
     }
 
     /// <summary>Simulates a momentary switch contact: close then open after a delay.</summary>
@@ -152,9 +209,19 @@ public class SimulatorPlatform : IHardwarePlatform
                 var key = Console.ReadKey(intercept: true);
                 if (_keyMappings.TryGetValue(key.Key, out int hwNum))
                 {
-                    TriggerSwitch(hwNum, SwitchState.Closed);
-                    Thread.Sleep(50); // simulate contact time
-                    TriggerSwitch(hwNum, SwitchState.Open);
+                    if (_flipperRules.ContainsKey(hwNum))
+                    {
+                        // Toggle: press once to raise the flipper, press again to lower.
+                        var current = _currentStates.GetValueOrDefault(hwNum, SwitchState.Open);
+                        TriggerSwitch(hwNum, current == SwitchState.Open ? SwitchState.Closed : SwitchState.Open);
+                    }
+                    else
+                    {
+                        // Momentary: brief contact, like a ball hitting a switch.
+                        TriggerSwitch(hwNum, SwitchState.Closed);
+                        Thread.Sleep(50);
+                        TriggerSwitch(hwNum, SwitchState.Open);
+                    }
                 }
             }
             Thread.Sleep(5);

@@ -54,13 +54,9 @@ public class SampleMachine : MachineConfig
 
     private void ConfigureCoils()
     {
-        // ── Left flipper (dual-wound) ─────────────────────────────────────────
-        AddCoil("LeftFlipperMain", hwNumber: 0x00, defaultPulseMs: 30);
-        AddCoil("LeftFlipperHold", hwNumber: 0x01, defaultPulseMs:  1);
-
-        // ── Right flipper (dual-wound) ────────────────────────────────────────
+        // ── Flippers ──────────────────────────────────────────────────────────
+        AddCoil("LeftFlipperMain",  hwNumber: 0x00, defaultPulseMs: 30);
         AddCoil("RightFlipperMain", hwNumber: 0x02, defaultPulseMs: 30);
-        AddCoil("RightFlipperHold", hwNumber: 0x03, defaultPulseMs:  1);
 
         // ── Slings ────────────────────────────────────────────────────────────
         AddCoil("LeftSlingCoil",  hwNumber: 0x04, defaultPulseMs: 20);
@@ -73,14 +69,10 @@ public class SampleMachine : MachineConfig
 
     private void ConfigureHardwareRules()
     {
-        // Flippers: board fires the coil the instant the button closes.
-        AddFlipperRule("LeftFlipper",
-            mainCoil: "LeftFlipperMain", holdCoil: "LeftFlipperHold",
-            pulseMs: 30, holdPower: 0.25f);
-
-        AddFlipperRule("RightFlipper",
-            mainCoil: "RightFlipperMain", holdCoil: "RightFlipperHold",
-            pulseMs: 30, holdPower: 0.25f);
+        // Flippers: board fires the coil the instant the button closes;
+        // hold power and EOS-based power reduction are managed on-board.
+        AddFlipperRule("LeftFlipper",  mainCoil: "LeftFlipperMain",  pulseMs: 30, holdPower: 0.25f);
+        AddFlipperRule("RightFlipper", mainCoil: "RightFlipperMain", pulseMs: 30, holdPower: 0.25f);
 
         // Slings: board fires the coil the instant the switch closes.
         AddBumperRule("LeftSling",  coilName: "LeftSlingCoil",  pulseMs: 20);

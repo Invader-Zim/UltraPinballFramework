@@ -86,23 +86,30 @@ public abstract class MachineConfig
     /// <summary>
     /// Configures a flipper rule on the hardware controller.
     /// The board handles switch → coil without any host round-trip.
+    /// After the initial pulse the board holds at <paramref name="holdPower"/> PWM,
+    /// with power reduction managed by the EOS switch on-board.
     /// </summary>
     /// <param name="switchName">Name of the flipper button switch as declared with <see cref="AddSwitch"/>.</param>
-    /// <param name="mainCoil">Name of the main (power) winding coil.</param>
-    /// <param name="holdCoil">
-    /// Name of a separate hold winding coil, or <c>null</c> for single-winding coils that
-    /// use PWM for the hold phase.
-    /// </param>
+    /// <param name="mainCoil">Name of the flipper coil.</param>
     /// <param name="pulseMs">Initial power burst duration in milliseconds.</param>
     /// <param name="holdPower">PWM duty cycle (0.0–1.0) applied after the initial pulse to keep the flipper up.</param>
     protected void AddFlipperRule(string switchName, string mainCoil,
-                                  string? holdCoil = null,
                                   int pulseMs = 10, float holdPower = 0.25f)
     {
-        var sw = Switches[switchName];
+        var sw   = Switches[switchName];
         var main = Coils[mainCoil];
-        int? holdHw = holdCoil != null ? Coils[holdCoil].HwNumber : null;
-        Platform.ConfigureFlipperRule(sw.HwNumber, main.HwNumber, holdHw, pulseMs, holdPower);
+        Platform.ConfigureFlipperRule(sw.HwNumber, main.HwNumber, pulseMs, holdPower);
+    }
+
+    /// <summary>
+    /// Removes any hardware rule associated with the named switch.
+    /// Use this to temporarily disable flippers (e.g., during tilt or ball save).
+    /// </summary>
+    /// <param name="switchName">Name of the switch whose rule should be cleared.</param>
+    protected void RemoveHardwareRule(string switchName)
+    {
+        var sw = Switches[switchName];
+        Platform.RemoveHardwareRule(sw.HwNumber);
     }
 
     /// <summary>

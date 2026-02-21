@@ -63,13 +63,14 @@ public interface IHardwarePlatform
     /// Configures a flipper rule directly on the hardware controller.
     /// The board fires the coil without waiting for host software — critical for
     /// the ~1ms latency requirement of flippers.
+    /// After the initial pulse the board holds the coil at <paramref name="holdPower"/> PWM;
+    /// the EOS switch tells the board when to reduce power. This is entirely board-managed.
     /// </summary>
     /// <param name="switchHw">Hardware number of the flipper button switch.</param>
-    /// <param name="mainCoilHw">Hardware number of the main (power) winding.</param>
-    /// <param name="holdCoilHw">Hardware number of the hold winding, or <c>null</c> for single-winding coils.</param>
+    /// <param name="mainCoilHw">Hardware number of the flipper coil.</param>
     /// <param name="pulseMs">Initial power burst duration in milliseconds.</param>
     /// <param name="holdPower">PWM duty cycle (0.0–1.0) for the hold phase after the pulse.</param>
-    void ConfigureFlipperRule(int switchHw, int mainCoilHw, int? holdCoilHw,
+    void ConfigureFlipperRule(int switchHw, int mainCoilHw,
                               int pulseMs, float holdPower = 0.25f);
 
     /// <summary>
