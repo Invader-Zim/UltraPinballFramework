@@ -75,6 +75,20 @@ public static class MediaEvents
     /// </summary>
     public const string SlamTilted = "slam_tilt";
 
+    // ── Multiball ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// A second ball entered the playfield — multiball is now active.
+    /// Payload: <c>{ balls_in_play: int }</c>.
+    /// </summary>
+    public const string MultiBallStarted = "multiball_started";
+
+    /// <summary>
+    /// A drain during multiball reduced the count back to one ball in play.
+    /// Single-ball play resumes; the ball has not yet ended. No payload.
+    /// </summary>
+    public const string MultiBallEnded = "multiball_ended";
+
     // ── Ball search ────────────────────────────────────────────────────────────
 
     /// <summary>

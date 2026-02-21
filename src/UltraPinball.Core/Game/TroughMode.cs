@@ -5,7 +5,7 @@ namespace UltraPinball.Core.Game;
 
 /// <summary>
 /// Built-in framework mode that manages the full ball lifecycle: launching balls from
-/// the trough to the shooter lane and detecting drains.
+/// the trough to the shooter lane, detecting drains, and supporting multiball.
 ///
 /// <para>
 /// Register as <see cref="ModeLifecycle.System"/> so it is always active. The mode
@@ -22,11 +22,18 @@ namespace UltraPinball.Core.Game;
 /// <para>
 /// <b>Ball save:</b> Set <see cref="AutoBallSaveSeconds"/> to automatically open a save
 /// window on each ball launch, or call <see cref="StartBallSave"/> manually from game code.
-/// While the window is open, any drain re-ejects the ball instead of ending the ball.
+/// While the window is open, a drain of the final ball re-ejects it instead of ending the ball.
+/// Ball save does not affect individual multiball drains — only the very last ball.
 /// </para>
 /// <para>
-/// Override <see cref="OnBallDrained"/> to add multiball drain tracking or other
-/// pre-drain logic. Call <see cref="GameController.EndBall"/> when ready.
+/// <b>Multiball:</b> Call <see cref="AddBall"/> to eject an additional ball. The count is
+/// confirmed in play once the shooter-lane switch goes inactive. <see cref="MultiBallStarted"/>
+/// fires when the second ball enters play; <see cref="MultiBallEnded"/> fires when a drain
+/// reduces the count back to one.
+/// </para>
+/// <para>
+/// Override <see cref="OnBallDrained"/> to add pre-drain logic. It is called only when the
+/// last ball drains. Call <see cref="GameController.EndBall"/> when ready.
 /// </para>
 /// </remarks>
 public class TroughMode : Mode
@@ -38,16 +45,16 @@ public class TroughMode : Mode
     private readonly string _ejectCoilName;
     private readonly string _shooterLaneSwitchName;
 
-    private bool _ballInPlay;
-    private bool _launching;
+    private int _ballsInPlay;
+    private int _launchingCount;
 
     // ── Ball save ─────────────────────────────────────────────────────────────
 
     private const string BallSaveDelayName = "ball_save";
 
     /// <summary>
-    /// True while the ball save window is open. Any drain during this window
-    /// re-ejects the ball instead of ending it.
+    /// True while the ball save window is open. A drain of the final ball during this
+    /// window re-ejects it instead of ending the ball.
     /// </summary>
     public bool BallSaveActive => IsDelayed(BallSaveDelayName);
 
@@ -58,7 +65,7 @@ public class TroughMode : Mode
     /// </summary>
     public float AutoBallSaveSeconds { get; set; } = 0f;
 
-    /// <summary>Fired each time a drain is intercepted and the ball is re-ejected.</summary>
+    /// <summary>Fired each time the final ball's drain is intercepted and the ball is re-ejected.</summary>
     public event Action? BallSaved;
 
     /// <summary>
@@ -71,15 +78,42 @@ public class TroughMode : Mode
     /// Opens the ball save window for the specified duration.
     /// If already open, restarts the timer.
     /// </summary>
-    /// <param name="seconds">How long the save window should remain open.</param>
     public void StartBallSave(float seconds) =>
         Delay(seconds, OnBallSaveTimerExpired, BallSaveDelayName);
 
-    /// <summary>
-    /// Closes the ball save window immediately.
-    /// <see cref="BallSaveExpired"/> is not raised.
-    /// </summary>
+    /// <summary>Closes the ball save window immediately. <see cref="BallSaveExpired"/> is not raised.</summary>
     public void StopBallSave() => CancelDelay(BallSaveDelayName);
+
+    // ── Multiball ─────────────────────────────────────────────────────────────
+
+    /// <summary>Number of balls currently in play on the playfield.</summary>
+    public int BallsInPlay => _ballsInPlay;
+
+    /// <summary>True when more than one ball is simultaneously in play.</summary>
+    public bool IsMultiBallActive => _ballsInPlay > 1;
+
+    /// <summary>
+    /// Fired when a second ball enters the playfield and multiball becomes active.
+    /// </summary>
+    public event Action? MultiBallStarted;
+
+    /// <summary>
+    /// Fired when a drain during multiball reduces the count back to one ball in play.
+    /// Single-ball play resumes; the ball has not yet ended.
+    /// </summary>
+    public event Action? MultiBallEnded;
+
+    /// <summary>
+    /// Ejects an additional ball from the trough into the shooter lane.
+    /// <see cref="BallsInPlay"/> increments and <see cref="MultiBallStarted"/> fires once
+    /// the shooter-lane switch goes inactive (ball confirmed on the playfield).
+    /// </summary>
+    public void AddBall()
+    {
+        _launchingCount++;
+        Log.LogInformation("TroughMode: ejecting additional ball for multiball.");
+        Game.Coils[_ejectCoilName].Pulse();
+    }
 
     // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -87,12 +121,12 @@ public class TroughMode : Mode
     /// Initialises a new TroughMode.
     /// </summary>
     /// <param name="troughSwitchNames">
-    /// Ordered list of trough switch names as declared in <see cref="MachineConfig"/>.
-    /// Each switch going active (beam broken) while a ball is in play signals a drain.
+    /// Ordered list of trough switch names. Each switch going active while a ball is in
+    /// play signals a drain.
     /// </param>
-    /// <param name="ejectCoilName">Name of the coil that kicks a ball from the trough to the shooter lane.</param>
+    /// <param name="ejectCoilName">Coil that kicks a ball from the trough to the shooter lane.</param>
     /// <param name="shooterLaneSwitchName">
-    /// Name of the shooter-lane switch. Going inactive (ball left) marks the ball as in play.
+    /// Shooter-lane switch. Going inactive (ball left) confirms the ball is on the playfield.
     /// </param>
     /// <param name="priority">Mode priority. Defaults to 10.</param>
     public TroughMode(
@@ -101,9 +135,9 @@ public class TroughMode : Mode
         string shooterLaneSwitchName = "ShooterLane",
         int priority = 10) : base(priority)
     {
-        _troughSwitchNames = [.. troughSwitchNames];
-        _ejectCoilName = ejectCoilName;
-        _shooterLaneSwitchName = shooterLaneSwitchName;
+        _troughSwitchNames      = [.. troughSwitchNames];
+        _ejectCoilName          = ejectCoilName;
+        _shooterLaneSwitchName  = shooterLaneSwitchName;
     }
 
     /// <inheritdoc />
@@ -125,8 +159,8 @@ public class TroughMode : Mode
 
     private void OnBallStarting(int ball)
     {
-        _ballInPlay = false;
-        _launching  = true;
+        _ballsInPlay    = 0;
+        _launchingCount = 1;
         Log.LogDebug("TroughMode: ejecting ball {Ball}.", ball);
         Game.Coils[_ejectCoilName].Pulse();
         if (AutoBallSaveSeconds > 0)
@@ -135,23 +169,42 @@ public class TroughMode : Mode
 
     private SwitchHandlerResult OnShooterLaneInactive(Switch sw)
     {
-        if (_launching && Game.IsGameInProgress)
+        if (_launchingCount > 0 && Game.IsGameInProgress)
         {
-            _launching  = false;
-            _ballInPlay = true;
-            Log.LogDebug("TroughMode: ball in play.");
+            _launchingCount--;
+            _ballsInPlay++;
+            Log.LogDebug("TroughMode: ball confirmed in play ({N} total).", _ballsInPlay);
+
+            if (_ballsInPlay == 2)
+            {
+                Log.LogInformation("Multiball started — {N} balls in play.", _ballsInPlay);
+                MultiBallStarted?.Invoke();
+                Game.Media?.Post(MediaEvents.MultiBallStarted, new { balls_in_play = _ballsInPlay });
+            }
         }
         return SwitchHandlerResult.Continue;
     }
 
     private SwitchHandlerResult OnTroughActive(Switch sw)
     {
-        if (!Game.IsGameInProgress || !_ballInPlay)
+        if (!Game.IsGameInProgress || _ballsInPlay == 0)
             return SwitchHandlerResult.Continue;
 
-        _ballInPlay = false;
-        Log.LogInformation("[DRAIN] Ball {Ball} drained into {Switch}. Score: {Score:N0}",
-            Game.Ball, sw.Name, Game.CurrentPlayer?.Score);
+        _ballsInPlay--;
+        Log.LogInformation("[DRAIN] {Switch} → {N} ball(s) remaining. Score: {Score:N0}",
+            sw.Name, _ballsInPlay, Game.CurrentPlayer?.Score);
+
+        if (_ballsInPlay > 0)
+        {
+            if (_ballsInPlay == 1)
+            {
+                Log.LogInformation("Multiball ended — back to single ball.");
+                MultiBallEnded?.Invoke();
+                Game.Media?.Post(MediaEvents.MultiBallEnded);
+            }
+            return SwitchHandlerResult.Stop;
+        }
+
         OnBallDrained(sw);
         return SwitchHandlerResult.Stop;
     }
@@ -165,20 +218,19 @@ public class TroughMode : Mode
     // ── Overridable drain callback ─────────────────────────────────────────────
 
     /// <summary>
-    /// Called when a ball drain is confirmed. Checks ball save first; if active,
+    /// Called when the last ball drains. Checks ball save first; if active,
     /// re-ejects the ball and fires <see cref="BallSaved"/>. Otherwise calls
     /// <see cref="GameController.EndBall"/>.
     ///
-    /// Override to add multiball drain tracking or other pre-drain logic.
-    /// Call <see cref="GameController.EndBall"/> when ready to end the ball.
+    /// Override to add pre-drain logic. Call <see cref="GameController.EndBall"/>
+    /// when ready to end the ball.
     /// </summary>
-    /// <param name="sw">The trough switch that triggered the drain.</param>
     protected virtual void OnBallDrained(Switch sw)
     {
         if (BallSaveActive)
         {
             Log.LogInformation("Ball saved!");
-            _launching = true;
+            _launchingCount++;
             Game.Coils[_ejectCoilName].Pulse();
             BallSaved?.Invoke();
             return;
