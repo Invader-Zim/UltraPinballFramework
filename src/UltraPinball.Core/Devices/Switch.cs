@@ -10,6 +10,7 @@ public class Switch
     public int HwNumber { get; }
     public SwitchType Type { get; }
     public bool Debounce { get; }
+    public SwitchTags Tags { get; }
 
     public SwitchState State { get; internal set; } = SwitchState.Open;
     public DateTime LastChangedAt { get; internal set; } = DateTime.UtcNow;
@@ -32,14 +33,17 @@ public class Switch
     /// When <c>true</c>, the platform applies hardware debouncing before reporting state changes.
     /// Set to <c>false</c> for flipper buttons, which require the fastest possible response.
     /// </param>
+    /// <param name="tags">Optional semantic role flags used for tag-based queries.</param>
     public Switch(string name, int hwNumber,
                   SwitchType type = SwitchType.NormallyOpen,
-                  bool debounce = true)
+                  bool debounce = true,
+                  SwitchTags tags = SwitchTags.None)
     {
         Name = name;
         HwNumber = hwNumber;
         Type = type;
         Debounce = debounce;
+        Tags = tags;
     }
 
     public override string ToString() =>

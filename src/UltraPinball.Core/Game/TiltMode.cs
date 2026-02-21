@@ -35,8 +35,6 @@ public class TiltMode : Mode
     /// <inheritdoc />
     public override ModeLifecycle DefaultLifecycle => ModeLifecycle.Ball;
 
-    private readonly string _tiltSwitchName;
-    private readonly string? _slamTiltSwitchName;
     private readonly int _warningsAllowed;
     private readonly IReadOnlyList<FlipperConfig> _flippers;
     private readonly float _cooldownSeconds;
@@ -65,12 +63,9 @@ public class TiltMode : Mode
     public event Action? SlamTilted;
 
     /// <summary>
-    /// Initialises TiltMode.
+    /// Initialises TiltMode. Tilt and slam-tilt switches are discovered at ball start
+    /// by querying <see cref="SwitchTags.Tilt"/> and <see cref="SwitchTags.SlamTilt"/> tags.
     /// </summary>
-    /// <param name="tiltSwitchName">Name of the tilt-bob switch as declared in <see cref="MachineConfig"/>.</param>
-    /// <param name="slamTiltSwitchName">
-    /// Optional slam-tilt switch name. When it activates the game ends immediately.
-    /// </param>
     /// <param name="warningsAllowed">Number of warnings before tilt occurs. Default 2.</param>
     /// <param name="flippers">
     /// Flipper configurations. When the ball tilts, the hardware rule for each flipper switch
@@ -82,18 +77,14 @@ public class TiltMode : Mode
     /// Defaults to 0.5 s; pass a shorter value in tests to avoid real-time delays.
     /// </param>
     public TiltMode(
-        string tiltSwitchName,
-        string? slamTiltSwitchName = null,
         int warningsAllowed = 2,
         IReadOnlyList<FlipperConfig>? flippers = null,
         int priority = 90,
         float cooldownSeconds = 0.5f) : base(priority)
     {
-        _tiltSwitchName    = tiltSwitchName;
-        _slamTiltSwitchName = slamTiltSwitchName;
-        _warningsAllowed   = warningsAllowed;
-        _flippers          = flippers ?? [];
-        _cooldownSeconds   = cooldownSeconds;
+        _warningsAllowed = warningsAllowed;
+        _flippers        = flippers ?? [];
+        _cooldownSeconds = cooldownSeconds;
     }
 
     /// <inheritdoc />
@@ -102,9 +93,13 @@ public class TiltMode : Mode
         _warningCount = 0;
         _tilted       = false;
 
-        AddSwitchHandler(_tiltSwitchName, SwitchActivation.Active, OnTiltSwitch);
-        if (_slamTiltSwitchName != null)
-            AddSwitchHandler(_slamTiltSwitchName, SwitchActivation.Active, OnSlamTiltSwitch);
+        var tiltSw = Game.Switches.SingleOrDefault(sw => sw.Tags.HasFlag(SwitchTags.Tilt));
+        if (tiltSw != null)
+            AddSwitchHandler(tiltSw.Name, SwitchActivation.Active, OnTiltSwitch);
+
+        var slamSw = Game.Switches.SingleOrDefault(sw => sw.Tags.HasFlag(SwitchTags.SlamTilt));
+        if (slamSw != null)
+            AddSwitchHandler(slamSw.Name, SwitchActivation.Active, OnSlamTiltSwitch);
     }
 
     /// <inheritdoc />

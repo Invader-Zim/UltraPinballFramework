@@ -27,7 +27,7 @@ public class TiltModeTests
         var machine  = new TiltTestMachine();
         machine.Initialize(platform);
 
-        var tilt = new TiltMode("Tilt", slamTiltSwitchName: "SlamTilt",
+        var tilt = new TiltMode(
             warningsAllowed: warningsAllowed,
             flippers: flippers,
             cooldownSeconds: 0.05f);   // short so tests don't block for 500 ms
@@ -189,10 +189,10 @@ class TiltTestMachine : MachineConfig
 {
     public override void Configure()
     {
-        AddSwitch("Tilt",           hwNumber: 0x0C);                          // NormallyOpen
-        AddSwitch("SlamTilt",       hwNumber: 0x0D);                          // NormallyOpen
-        AddSwitch("LeftFlipper",    hwNumber: 0x05, debounce: false);
-        AddSwitch("RightFlipper",   hwNumber: 0x0A, debounce: false);
+        AddSwitch("Tilt",           hwNumber: 0x0C, tags: SwitchTags.Tilt);
+        AddSwitch("SlamTilt",       hwNumber: 0x0D, tags: SwitchTags.SlamTilt);
+        AddSwitch("LeftFlipper",    hwNumber: 0x05, debounce: false, tags: SwitchTags.UserButton);
+        AddSwitch("RightFlipper",   hwNumber: 0x0A, debounce: false, tags: SwitchTags.UserButton);
 
         AddCoil("LeftFlipperMain",  hwNumber: 0x00, defaultPulseMs: 30);
         AddCoil("RightFlipperMain", hwNumber: 0x02, defaultPulseMs: 30);

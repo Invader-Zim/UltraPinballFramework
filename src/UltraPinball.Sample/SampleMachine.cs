@@ -23,35 +23,35 @@ public class SampleMachine : MachineConfig
     private void ConfigureSwitches()
     {
         // ── Ball path ─────────────────────────────────────────────────────────
-        AddSwitch("ShooterLane",    hwNumber: 0x00);
+        AddSwitch("ShooterLane",    hwNumber: 0x00, tags: SwitchTags.ShooterLane);
 
         // ── Left side ─────────────────────────────────────────────────────────
-        AddSwitch("LeftOutlane",    hwNumber: 0x01);
-        AddSwitch("LeftInlane",     hwNumber: 0x02);
-        AddSwitch("LeftFlipperEos", hwNumber: 0x03);  // TODO: wire into EOS hardware rule
-        AddSwitch("LeftSling",      hwNumber: 0x04);  // two physical switches in parallel → one game switch
-        AddSwitch("LeftFlipper",    hwNumber: 0x05, debounce: false);
+        AddSwitch("LeftOutlane",    hwNumber: 0x01, tags: SwitchTags.Playfield);
+        AddSwitch("LeftInlane",     hwNumber: 0x02, tags: SwitchTags.Playfield);
+        AddSwitch("LeftFlipperEos", hwNumber: 0x03, tags: SwitchTags.Eos);
+        AddSwitch("LeftSling",      hwNumber: 0x04, tags: SwitchTags.Playfield);  // two physical switches in parallel → one game switch
+        AddSwitch("LeftFlipper",    hwNumber: 0x05, debounce: false, tags: SwitchTags.UserButton);
 
         // ── Right side ────────────────────────────────────────────────────────
-        AddSwitch("RightOutlane",    hwNumber: 0x06);
-        AddSwitch("RightInlane",     hwNumber: 0x07);
-        AddSwitch("RightFlipperEos", hwNumber: 0x08);  // TODO: wire into EOS hardware rule
-        AddSwitch("RightSling",      hwNumber: 0x09);
-        AddSwitch("RightFlipper",    hwNumber: 0x0A, debounce: false);
+        AddSwitch("RightOutlane",    hwNumber: 0x06, tags: SwitchTags.Playfield);
+        AddSwitch("RightInlane",     hwNumber: 0x07, tags: SwitchTags.Playfield);
+        AddSwitch("RightFlipperEos", hwNumber: 0x08, tags: SwitchTags.Eos);
+        AddSwitch("RightSling",      hwNumber: 0x09, tags: SwitchTags.Playfield);
+        AddSwitch("RightFlipper",    hwNumber: 0x0A, debounce: false, tags: SwitchTags.UserButton);
 
         // ── Cabinet ───────────────────────────────────────────────────────────
-        AddSwitch("Start",          hwNumber: 0x0B);
-        AddSwitch("Tilt",           hwNumber: 0x0C);
-        AddSwitch("SlamTilt",       hwNumber: 0x0D);
+        AddSwitch("Start",          hwNumber: 0x0B, tags: SwitchTags.UserButton);
+        AddSwitch("Tilt",           hwNumber: 0x0C, tags: SwitchTags.Tilt);
+        AddSwitch("SlamTilt",       hwNumber: 0x0D, tags: SwitchTags.SlamTilt);
 
         // ── Trough (5-ball, normally-closed opto switches) ────────────────────
         // Active = Open = beam broken = ball present.
         // Trough0 is nearest the eject coil; Trough4 is farthest (drain end).
-        AddSwitch("Trough0", hwNumber: 0x10, type: SwitchType.NormallyClosed);
-        AddSwitch("Trough1", hwNumber: 0x11, type: SwitchType.NormallyClosed);
-        AddSwitch("Trough2", hwNumber: 0x12, type: SwitchType.NormallyClosed);
-        AddSwitch("Trough3", hwNumber: 0x13, type: SwitchType.NormallyClosed);
-        AddSwitch("Trough4", hwNumber: 0x14, type: SwitchType.NormallyClosed);
+        AddSwitch("Trough0", hwNumber: 0x10, type: SwitchType.NormallyClosed, tags: SwitchTags.Trough);
+        AddSwitch("Trough1", hwNumber: 0x11, type: SwitchType.NormallyClosed, tags: SwitchTags.Trough);
+        AddSwitch("Trough2", hwNumber: 0x12, type: SwitchType.NormallyClosed, tags: SwitchTags.Trough);
+        AddSwitch("Trough3", hwNumber: 0x13, type: SwitchType.NormallyClosed, tags: SwitchTags.Trough);
+        AddSwitch("Trough4", hwNumber: 0x14, type: SwitchType.NormallyClosed, tags: SwitchTags.Trough);
     }
 
     private void ConfigureCoils()

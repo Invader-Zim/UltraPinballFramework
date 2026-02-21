@@ -20,8 +20,7 @@ public class SampleGame : GameController
         };
         RegisterMode(trough);
 
-        var tilt = new TiltMode("Tilt", slamTiltSwitchName: "SlamTilt",
-            flippers:
+        var tilt = new TiltMode(flippers:
             [
                 new FlipperConfig("LeftFlipper",  "LeftFlipperMain",  PulseMs: 30),
                 new FlipperConfig("RightFlipper", "RightFlipperMain", PulseMs: 30),

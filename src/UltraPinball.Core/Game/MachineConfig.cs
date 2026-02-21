@@ -43,11 +43,13 @@ public abstract class MachineConfig
     /// Pass <c>false</c> for flipper buttons and other switches that need the fastest
     /// possible response; hardware debouncing adds a small latency.
     /// </param>
+    /// <param name="tags">Optional semantic role flags used for tag-based queries.</param>
     protected Switch AddSwitch(string name, int hwNumber,
                                SwitchType type = SwitchType.NormallyOpen,
-                               bool debounce = true)
+                               bool debounce = true,
+                               SwitchTags tags = SwitchTags.None)
     {
-        var sw = new Switch(name, hwNumber, type, debounce);
+        var sw = new Switch(name, hwNumber, type, debounce, tags);
         Switches.Add(name, hwNumber, sw);
         return sw;
     }
