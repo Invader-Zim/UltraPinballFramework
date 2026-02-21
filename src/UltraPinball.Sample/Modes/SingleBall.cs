@@ -59,9 +59,12 @@ public class SingleBall : Mode
         if (Game.CurrentPlayer == null) return;
 
         Game.CurrentPlayer.Score += points;
+        Game.CurrentPlayer.IncrementBallState("hits");
 
-        Log.LogInformation("[SINGLE BALL] +{Points} from {Source} → {Total:N0}",
-            points, source, Game.CurrentPlayer.Score);
+        var hits = Game.CurrentPlayer.GetBallState<long>("hits");
+
+        Log.LogInformation("[SINGLE BALL] +{Points} from {Source} → {Total:N0} (hit #{Hits} this ball)",
+            points, source, Game.CurrentPlayer.Score, hits);
 
         Game.Media?.Post(SampleMediaEvents.PointsScored, new
         {
@@ -69,6 +72,7 @@ public class SingleBall : Mode
             points,
             source,
             total  = Game.CurrentPlayer.Score,
+            hits,
         });
     }
 }

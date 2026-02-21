@@ -198,6 +198,8 @@ public class GameController
 
     public virtual void StartBall()
     {
+        CurrentPlayer?.ResetBallState();
+
         foreach (var (mode, lc) in _registeredModes)
             if (lc == ModeLifecycle.Ball && !Modes.Contains(mode))
                 Modes.Add(mode);
