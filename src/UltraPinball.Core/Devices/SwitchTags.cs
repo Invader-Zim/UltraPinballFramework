@@ -11,4 +11,5 @@ public enum SwitchTags
     UserButton  = 1 << 4,  // player-facing button (flippers, Start, Launch, etc.)
     Tilt        = 1 << 5,  // tilt bob switch
     SlamTilt    = 1 << 6,  // slam tilt switch
+    Service     = 1 << 7,  // service door or button; entry point for ServiceMode
 }

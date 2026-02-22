@@ -15,6 +15,7 @@ public class SampleGame : GameController
         var settings = new JsonOperatorSettingsRepository().Load();
         ApplySettings(settings);
 
+        RegisterMode(new ServiceMode());
         RegisterMode(new HighScoreMode(new JsonHighScoreRepository("high_scores.json")));
 
         RegisterMode(new AttractMode());

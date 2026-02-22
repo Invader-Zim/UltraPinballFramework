@@ -43,6 +43,7 @@ public class SampleMachine : MachineConfig
         AddSwitch("Start",          hwNumber: 0x0B, tags: SwitchTags.UserButton);
         AddSwitch("Tilt",           hwNumber: 0x0C, tags: SwitchTags.Tilt);
         AddSwitch("SlamTilt",       hwNumber: 0x0D, tags: SwitchTags.SlamTilt);
+        AddSwitch("ServiceButton",  hwNumber: 0x0E, tags: SwitchTags.Service);
 
         // ── Trough (5-ball, normally-closed opto switches) ────────────────────
         // Active = Open = beam broken = ball present.

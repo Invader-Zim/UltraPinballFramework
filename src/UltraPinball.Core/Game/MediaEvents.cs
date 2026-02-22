@@ -150,4 +150,24 @@ public static class MediaEvents
     /// Payload: <c>{ entries: [{ Name: string, Score: long, Date: DateTime }] }</c>.
     /// </summary>
     public const string HighScoreUpdated = "high_score_updated";
+
+    // ── Service mode ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Service mode has been entered — all coils are disabled and switch testing is active.
+    /// No payload.
+    /// </summary>
+    public const string ServiceModeEntered = "service_mode_entered";
+
+    /// <summary>
+    /// Service mode has been exited — coils are re-enabled and normal play can resume.
+    /// No payload.
+    /// </summary>
+    public const string ServiceModeExited = "service_mode_exited";
+
+    /// <summary>
+    /// A switch activated while service mode was open — use for switch-test display.
+    /// Payload: <c>{ name: string }</c>.
+    /// </summary>
+    public const string ServiceSwitchActivated = "service_switch_activated";
 }
