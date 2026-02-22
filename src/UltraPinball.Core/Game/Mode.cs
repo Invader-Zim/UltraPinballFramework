@@ -136,6 +136,26 @@ public abstract class Mode
 
     protected bool IsDelayed(string name) => _delays.Any(d => d.Name == name);
 
+    /// <summary>
+    /// Holds a coil energised for <paramref name="seconds"/>, then cuts power.
+    /// <see cref="Devices.Coil.IsEnabled"/> is unaffected — the coil can be pulsed
+    /// again immediately after the hold ends.
+    /// </summary>
+    /// <param name="coilName">Symbolic name as declared in <see cref="MachineConfig"/>.</param>
+    /// <param name="seconds">How long to keep the coil energised.</param>
+    /// <param name="delayName">
+    /// Optional stable name for the underlying <see cref="Delay"/> entry.
+    /// Defaults to <c>"hold_{coilName}"</c>. Pass an explicit name to cancel the
+    /// release early via <see cref="CancelDelay"/>.
+    /// </param>
+    /// <returns>The delay name (useful for cancellation).</returns>
+    protected string HoldCoilFor(string coilName, float seconds, string? delayName = null)
+    {
+        var coil = Game.Coils[coilName];
+        coil.Hold();
+        return Delay(seconds, coil.CutPower, delayName ?? $"hold_{coilName}");
+    }
+
     // ── Lifecycle callbacks ───────────────────────────────────────────────────
 
     /// <summary>Called by ModeQueue when this mode becomes active.</summary>
