@@ -28,13 +28,6 @@ public class SingleBall : Mode
         AddSwitchHandler("RightSling",   SwitchActivation.Active, OnScoringSwitch);
     }
 
-    public override void ModeStopped()
-    {
-        // Clean up DoubleScoring if the ball ends while it is still running.
-        if (Game.Modes.Contains(_doubleScoring))
-            Game.Modes.Remove(_doubleScoring);
-    }
-
     // ── Switch handlers ───────────────────────────────────────────────────────
 
     private SwitchHandlerResult OnScoringSwitch(Switch sw)
@@ -47,8 +40,7 @@ public class SingleBall : Mode
     {
         AwardPoints(100, sw.Name);
 
-        if (!Game.Modes.Contains(_doubleScoring))
-            Game.Modes.Add(_doubleScoring);
+        AddChildMode(_doubleScoring);
 
         return SwitchHandlerResult.Continue;
     }

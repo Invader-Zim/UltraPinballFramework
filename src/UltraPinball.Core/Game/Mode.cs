@@ -66,6 +66,7 @@ public abstract class Mode
 
     private readonly List<RegisteredHandler> _handlers = new();
     private readonly List<PendingDelay> _delays = new();
+    private readonly List<Mode> _childModes = new();
     private ILogger? _log;
 
     protected ILogger Log => _log ??= Game.CreateLogger(GetType().Name);
@@ -137,6 +138,28 @@ public abstract class Mode
     protected bool IsDelayed(string name) => _delays.Any(d => d.Name == name);
 
     /// <summary>
+    /// Adds <paramref name="child"/> as a child of this mode. The child is registered
+    /// with <see cref="GameController.Modes"/> immediately and will be automatically
+    /// removed when this mode is deactivated.
+    /// </summary>
+    protected void AddChildMode(Mode child)
+    {
+        if (_childModes.Contains(child)) return;
+        _childModes.Add(child);
+        Game.Modes.Add(child);
+    }
+
+    /// <summary>
+    /// Removes <paramref name="child"/> from this mode's child list and from
+    /// <see cref="GameController.Modes"/>. Safe to call if the child has already been removed.
+    /// </summary>
+    protected void RemoveChildMode(Mode child)
+    {
+        _childModes.Remove(child);
+        Game.Modes.Remove(child);
+    }
+
+    /// <summary>
     /// Holds a coil energised for <paramref name="seconds"/>, then cuts power.
     /// <see cref="Devices.Coil.IsEnabled"/> is unaffected — the coil can be pulsed
     /// again immediately after the hold ends.
@@ -180,6 +203,10 @@ public abstract class Mode
     /// </summary>
     internal void Deactivate()
     {
+        foreach (var child in _childModes.ToList())
+            Game.Modes.Remove(child);
+        _childModes.Clear();
+
         _handlers.Clear();
         _delays.Clear();
         ModeStopped();
