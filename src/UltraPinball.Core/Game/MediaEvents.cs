@@ -109,6 +109,26 @@ public static class MediaEvents
     /// </summary>
     public const string BonusCompleted = "bonus_completed";
 
+    // ── Drop targets ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// A single drop target was knocked down.
+    /// Payload: <c>{ target: string }</c>.
+    /// </summary>
+    public const string DropTargetHit = "drop_target_hit";
+
+    /// <summary>
+    /// All targets in a bank are now down.
+    /// Payload: <c>{ targets: int }</c>.
+    /// </summary>
+    public const string DropTargetBankComplete = "drop_target_bank_complete";
+
+    /// <summary>
+    /// The drop target bank reset coil was pulsed — all targets are returning to standing.
+    /// No payload.
+    /// </summary>
+    public const string DropTargetBankReset = "drop_target_bank_reset";
+
     // ── Ball search ────────────────────────────────────────────────────────────
 
     /// <summary>
