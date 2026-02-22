@@ -12,17 +12,22 @@ public class SampleGame : GameController
 
     protected override void OnStartup()
     {
+        var settings = new JsonOperatorSettingsRepository().Load();
+        ApplySettings(settings);
+
         RegisterMode(new HighScoreMode(new JsonHighScoreRepository("high_scores.json")));
 
         RegisterMode(new AttractMode());
 
         var trough = new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"])
         {
-            AutoBallSaveSeconds = 8f
+            AutoBallSaveSeconds = settings.BallSaveSeconds
         };
         RegisterMode(trough);
 
-        var tilt = new TiltMode(flippers:
+        var tilt = new TiltMode(
+            warningsAllowed: settings.TiltWarnings,
+            flippers:
             [
                 new FlipperConfig("LeftFlipper",  "LeftFlipperMain",  PulseMs: 30),
                 new FlipperConfig("RightFlipper", "RightFlipperMain", PulseMs: 30),

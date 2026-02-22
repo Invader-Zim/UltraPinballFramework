@@ -38,6 +38,16 @@ public class GameController
     public int MaxPlayers { get; set; } = 4;
     public bool IsGameInProgress => Ball > 0;
 
+    /// <summary>
+    /// Applies operator settings to this game controller.
+    /// Call from <see cref="OnStartup"/> before <see cref="StartGame"/> is invoked.
+    /// </summary>
+    public void ApplySettings(OperatorSettings settings)
+    {
+        BallsPerGame = settings.BallsPerGame;
+        MaxPlayers   = settings.MaxPlayers;
+    }
+
     // ── Game lifecycle events ─────────────────────────────────────────────────
 
     public event Action? GameStarted;
