@@ -12,6 +12,8 @@ public class SampleGame : GameController
 
     protected override void OnStartup()
     {
+        RegisterMode(new HighScoreMode(new JsonHighScoreRepository("high_scores.json")));
+
         RegisterMode(new AttractMode());
 
         var trough = new TroughMode(["Trough0", "Trough1", "Trough2", "Trough3", "Trough4"])

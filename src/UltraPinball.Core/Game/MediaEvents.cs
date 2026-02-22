@@ -142,4 +142,12 @@ public static class MediaEvents
     /// No payload.
     /// </summary>
     public const string BallSearchStopped = "ball_search_stopped";
+
+    // ── High scores ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// The leaderboard changed — one or more new entries were saved.
+    /// Payload: <c>{ entries: [{ Name: string, Score: long, Date: DateTime }] }</c>.
+    /// </summary>
+    public const string HighScoreUpdated = "high_score_updated";
 }
